@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ShopSphere | Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+  </head>
+  <body>
+    <div class="auth-shell">
+      <aside class="auth-visual">
+        <a href="/home.html" class="brand" style="font-size: 1.35rem"
+          ><span>🛍️</span> Shop<span
+            class="dot"
+            style="color: var(--color-primary)"
+            >Sphere</span
+          ></a
+        >
+        <div>
+          <blockquote>
+            “Join a shop built for people who like things to just work.”
+          </blockquote>
+          <cite>— The ShopSphere team</cite>
+        </div>
+        <div
+          class="u-flex u-gap-3"
+          style="opacity: 0.7; font-size: var(--fs-xs)"
+        >
+          <span>Free account</span>&middot;<span>Wishlist &amp; cart sync</span
+          >&middot;<span>Order history</span>
+        </div>
+      </aside>
+
+      <div class="auth-form-side">
+        <div class="auth-box">
+          <div class="logo">Shop<span>Sphere</span></div>
+          <h1>Create account</h1>
+          <p class="sub">Join ShopSphere — it only takes a minute.</p>
+
+          <form id="signupForm" novalidate>
+            <div class="field">
+              <label for="name">Full name</label>
+              <input
+                class="input"
+                id="name"
+                name="name"
+                type="text"
+                autocomplete="name"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="email">Email address</label>
+              <input
+                class="input"
+                id="email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <div class="input-group">
+                <input
+                  class="input"
+                  id="password"
+                  name="password"
+                  type="password"
+                  minlength="6"
+                  autocomplete="new-password"
+                  required
+                />
+                <button
+                  class="input-toggle"
+                  type="button"
+                  data-toggle-for="password"
+                  aria-label="Show password"
+                >
+                  👁️
+                </button>
+              </div>
+              <span class="helper-text">At least 6 characters.</span>
+            </div>
+            <div class="field">
+              <label for="confirmPassword">Confirm password</label>
+              <div class="input-group">
+                <input
+                  class="input"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  minlength="6"
+                  autocomplete="new-password"
+                  required
+                />
+                <button
+                  class="input-toggle"
+                  type="button"
+                  data-toggle-for="confirmPassword"
+                  aria-label="Show password"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+            <button
+              id="submitButton"
+              type="submit"
+              class="btn btn-primary btn-block"
+            >
+              Create account
+            </button>
+          </form>
+
+          <p class="form-msg" id="message" aria-live="polite"></p>
+          <p class="auth-footer-link">
+            Already have an account? <a href="/login.html">Sign in</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="/assets/js/app.js"></script>
+    <script>
+      const form = document.getElementById("signupForm");
+      const nameInput = document.getElementById("name");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const confirmPasswordInput = document.getElementById("confirmPassword");
+      const message = document.getElementById("message");
+      const submitButton = document.getElementById("submitButton");
+
+      document.querySelectorAll("[data-toggle-for]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const inp = document.getElementById(btn.dataset.toggleFor);
+          inp.type = inp.type === "password" ? "text" : "password";
+        });
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim().toLowerCase();
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        message.className = "form-msg";
+
+        if (!name) {
+          message.classList.add("error");
+          message.textContent = "Please enter your full name.";
+          nameInput.focus();
+          return;
+        }
+
+        if (!emailInput.checkValidity()) {
+          message.classList.add("error");
+          message.textContent = "Please enter a valid email address.";
+          emailInput.focus();
+          return;
+        }
+
+        if (password.length < 6) {
+          message.classList.add("error");
+          message.textContent = "Password must contain at least 6 characters.";
+          passwordInput.focus();
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          message.classList.add("error");
+          message.textContent = "Passwords do not match.";
+          confirmPasswordInput.focus();
+          return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.innerHTML =
+          '<span class="spinner"></span> Creating account…';
+        message.textContent = "";
+
+        try {
+          const response = await fetch("/api/auth/signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            message.classList.add("error");
+            message.textContent = data.message || "Unable to create account.";
+            submitButton.disabled = false;
+            submitButton.textContent = "Create account";
+            return;
+          }
+
+          message.className = "form-msg success";
+          message.textContent =
+            "Account created successfully. Redirecting to login...";
+
+          setTimeout(() => {
+            window.location.href = "/login.html";
+          }, 1000);
+        } catch (error) {
+          console.error(error);
+          message.classList.add("error");
+          message.textContent = "Unable to connect to server.";
+          submitButton.disabled = false;
+          submitButton.textContent = "Create account";
+        }
+      });
+    </script>
+  </body>
+</html>

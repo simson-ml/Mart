@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ShopSphere | Product</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+  </head>
+  <body>
+    <div id="site-header"></div>
+
+    <div class="container page-head">
+      <div class="breadcrumbs">
+        <a href="/home.html">Home</a> / <a href="/home.html#shop">Shop</a> /
+        <span id="crumbName">Product</span>
+      </div>
+    </div>
+
+    <div class="container" id="pdRoot">
+      <div class="pd-layout">
+        <div class="skeleton pd-media"></div>
+        <div>
+          <div
+            class="skeleton"
+            style="height: 20px; width: 120px; margin-bottom: 16px"
+          ></div>
+          <div
+            class="skeleton"
+            style="height: 40px; width: 80%; margin-bottom: 16px"
+          ></div>
+          <div
+            class="skeleton"
+            style="height: 32px; width: 140px; margin-bottom: 16px"
+          ></div>
+          <div class="skeleton" style="height: 80px; width: 100%"></div>
+        </div>
+      </div>
+    </div>
+
+    <section id="relatedSection" style="display: none">
+      <div class="container">
+        <div class="section-head">
+          <div><h2>You might also like</h2></div>
+        </div>
+        <div class="grid-products" id="relatedGrid"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="card" style="padding: var(--sp-6); max-width: 760px">
+          <div class="section-head" style="margin-bottom: 20px">
+            <div>
+              <h2>Reviews</h2>
+              <p id="reviewCount"></p>
+            </div>
+          </div>
+          <div id="reviewList"></div>
+          <div
+            id="reviewFormWrap"
+            class="u-mt-6"
+            style="
+              border-top: 1px solid var(--color-border-soft);
+              padding-top: 24px;
+            "
+          >
+            <h3 class="u-mt-2">Write a review</h3>
+            <form id="reviewForm" class="u-mt-4">
+              <div class="field">
+                <label>Your rating</label>
+                <div
+                  id="starPicker"
+                  class="u-flex u-gap-2"
+                  style="font-size: 22px; cursor: pointer"
+                ></div>
+              </div>
+              <div class="field">
+                <label for="reviewComment">Your review</label>
+                <textarea
+                  class="input"
+                  id="reviewComment"
+                  rows="3"
+                  placeholder="Share your thoughts about this product…"
+                ></textarea>
+              </div>
+              <button class="btn btn-primary" type="submit">
+                Submit review
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="site-footer"></div>
+
+    <script src="/assets/js/app.js"></script>
+    <script>
+      SS.renderHeader("shop");
+      SS.renderFooter();
+
+      const id = new URLSearchParams(location.search).get("id");
+      const pdRoot = document.getElementById("pdRoot");
+      let currentProduct = null;
+      let selectedRating = 5;
+
+      function renderStars() {
+        const picker = document.getElementById("starPicker");
+        picker.innerHTML = [1, 2, 3, 4, 5]
+          .map(
+            (n) =>
+              `<span data-star="${n}" style="opacity:${n <= selectedRating ? 1 : 0.3}">★</span>`,
+          )
+          .join("");
+        picker.querySelectorAll("[data-star]").forEach((s) =>
+          s.addEventListener("click", () => {
+            selectedRating = Number(s.dataset.star);
+            renderStars();
+          }),
+        );
+      }
+      renderStars();
+
+      async function loadProduct() {
+        if (!id) {
+          pdRoot.innerHTML = `<div class="empty-state"><div class="ic">❓</div><h3>Product not found</h3><p>No product was specified.</p><a href="/home.html" class="btn btn-primary">Back to shop</a></div>`;
+          return;
+        }
+        try {
+          const p = await SS.api("/api/products/" + id);
+          currentProduct = p;
+          document.getElementById("crumbName").textContent = p.name;
+          document.title = "ShopSphere | " + p.name;
+
+          const user = await SS.getMe();
+          let wished = false;
+          if (user) {
+            try {
+              const wl = await SS.api("/api/wishlist");
+              wished = (wl || []).some((w) => w.product.id === p.id);
+            } catch (e) {}
+          }
+
+          const outOfStock = Number(p.stock) <= 0;
+          pdRoot.innerHTML = `
+      <div class="pd-layout">
+        <div class="pd-media">
+          ${p.imageUrl ? `<img src="${SS.escapeHtml(p.imageUrl)}" alt="${SS.escapeHtml(p.name)}" onerror="this.parentElement.textContent='🛍️'">` : "🛍️"}
+        </div>
+        <div class="pd-info">
+          <span class="product-category">${SS.escapeHtml((p.category && p.category.name) || "General")}</span>
+          <h1>${SS.escapeHtml(p.name)}</h1>
+          <div class="rating-row"><span class="stars">${"★".repeat(Math.round(p.rating || 0))}${"☆".repeat(5 - Math.round(p.rating || 0))}</span><span>${(p.rating || 0).toFixed(1)} rating</span></div>
+          <div class="pd-price">${SS.money(p.price)}</div>
+          ${outOfStock ? `<span class="badge badge-error">Out of stock</span>` : `<span class="badge badge-success">In stock — ${p.stock} available</span>`}
+          <p class="pd-desc u-mt-4">${SS.escapeHtml(p.description || "No description provided for this product.")}</p>
+          <div class="field" style="max-width:160px">
+            <label>Quantity</label>
+            <div class="qty-stepper" id="qtyStepper">
+              <button type="button" id="qtyMinus">−</button>
+              <span id="qtyValue">1</span>
+              <button type="button" id="qtyPlus">+</button>
+            </div>
+          </div>
+          <div class="pd-actions">
+            <button class="btn btn-primary" id="addCartBtn" ${outOfStock ? "disabled" : ""}>${SS.ICON.bag} Add to cart</button>
+            <button class="btn btn-secondary btn-icon-only" id="wishBtn" aria-label="Toggle wishlist">${SS.ICON.heart}</button>
+          </div>
+        </div>
+      </div>`;
+
+          if (wished)
+            document.getElementById("wishBtn").classList.add("active");
+          document.getElementById("wishBtn").style.color = wished
+            ? "var(--color-error)"
+            : "";
+
+          let qty = 1;
+          const qtyValue = document.getElementById("qtyValue");
+          document.getElementById("qtyMinus").addEventListener("click", () => {
+            qty = Math.max(1, qty - 1);
+            qtyValue.textContent = qty;
+          });
+          document.getElementById("qtyPlus").addEventListener("click", () => {
+            qty = Math.min(p.stock || 99, qty + 1);
+            qtyValue.textContent = qty;
+          });
+          document
+            .getElementById("addCartBtn")
+            .addEventListener("click", () => SS.addToCart(p.id, qty));
+          document.getElementById("wishBtn").addEventListener("click", (e) => {
+            const btn = e.currentTarget;
+            SS.toggleWishlist(p.id, btn.classList.contains("active"), btn).then(
+              () => {
+                btn.style.color = btn.classList.contains("active")
+                  ? "var(--color-error)"
+                  : "";
+              },
+            );
+          });
+
+          loadRelated(p);
+          loadReviews(p.id);
+        } catch (e) {
+          pdRoot.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div><h3>Couldn't load this product</h3><p>${SS.escapeHtml(e.message)}</p><a href="/home.html" class="btn btn-primary">Back to shop</a></div>`;
+        }
+      }
+
+      async function loadRelated(p) {
+        try {
+          const cat = p.category && p.category.name;
+          const data = await SS.api(
+            "/api/recommendations" +
+              (cat ? "?category=" + encodeURIComponent(cat) : ""),
+          );
+          const others = (data || []).filter((x) => x.id !== p.id).slice(0, 4);
+          if (!others.length) return;
+          document.getElementById("relatedSection").style.display = "";
+          const grid = document.getElementById("relatedGrid");
+          grid.innerHTML = others
+            .map((x) => SS.productCardHtml(x, false))
+            .join("");
+          SS.wireProductGrid(grid);
+        } catch (e) {}
+      }
+
+      async function loadReviews(pid) {
+        const list = document.getElementById("reviewList");
+        try {
+          const reviews = await SS.api("/api/reviews/product/" + pid);
+          document.getElementById("reviewCount").textContent = reviews.length
+            ? `${reviews.length} review${reviews.length === 1 ? "" : "s"}`
+            : "No reviews yet — be the first.";
+          list.innerHTML = reviews.length
+            ? reviews
+                .map(
+                  (r) => `
+      <div class="review-item">
+        <div class="review-head">
+          <span class="avatar">${SS.escapeHtml(((r.user && r.user.name) || "?").charAt(0).toUpperCase())}</span>
+          <b>${SS.escapeHtml(r.user ? r.user.name : "Shopper")}</b>
+          <span class="text-faint" style="font-size:12px">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</span>
+        </div>
+        <p class="text-muted" style="font-size:var(--fs-sm)">${SS.escapeHtml(r.comment || "")}</p>
+      </div>`,
+                )
+                .join("")
+            : `<p class="text-muted" style="font-size:var(--fs-sm)">No reviews yet.</p>`;
+        } catch (e) {
+          list.innerHTML = "";
+        }
+      }
+
+      document
+        .getElementById("reviewForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const user = await SS.getMe();
+          if (!user) {
+            window.location.href = "/login.html";
+            return;
+          }
+          const comment = document.getElementById("reviewComment").value.trim();
+          try {
+            await SS.api("/api/reviews/product/" + id, {
+              method: "POST",
+              body: { rating: selectedRating, comment },
+            });
+            SS.toast("Review submitted", "success");
+            document.getElementById("reviewComment").value = "";
+            loadReviews(id);
+            loadProduct();
+          } catch (err) {
+            SS.toast(err.message, "error");
+          }
+        });
+
+      loadProduct();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ShopSphere | Discover Products</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+  </head>
+  <body>
+    <div id="site-header"></div>
+
+    <section class="hero">
+      <div class="container hero-inner">
+        <div>
+          <span class="eyebrow">New arrivals every week</span>
+          <h1>Shop the things you<br /><em>actually</em> want.</h1>
+          <p class="lead">
+            A curated catalog, honest prices, and a checkout that doesn't get in
+            your way. Welcome to ShopSphere.
+          </p>
+          <div class="hero-actions">
+            <a href="#shop" class="btn btn-primary">Start shopping</a>
+            <a href="#categories" class="btn btn-secondary"
+              >Browse categories</a
+            >
+          </div>
+          <div class="hero-stats">
+            <div><b id="statProducts">—</b><span>Products</span></div>
+            <div><b id="statCategories">—</b><span>Categories</span></div>
+            <div><b>4.8★</b><span>Avg. rating</span></div>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">🛍️</div>
+      </div>
+    </section>
+
+    <section id="categories">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2>Shop by category</h2>
+            <p>Jump straight to what you're looking for.</p>
+          </div>
+        </div>
+        <div class="category-grid" id="categoryGrid">
+          <div class="skeleton" style="height: 96px"></div>
+          <div class="skeleton" style="height: 96px"></div>
+          <div class="skeleton" style="height: 96px"></div>
+          <div class="skeleton" style="height: 96px"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="trending">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2>Trending now</h2>
+            <p>Highest-rated picks from across the store.</p>
+          </div>
+        </div>
+        <div class="grid-products" id="trendingGrid"></div>
+      </div>
+    </section>
+
+    <section id="shop">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2>All products</h2>
+            <p id="resultsSummary">Browse the full catalog.</p>
+          </div>
+          <form
+            id="shopSearchForm"
+            class="nav-search"
+            style="max-width: 280px"
+            role="search"
+          >
+            <span aria-hidden="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" /></svg
+            ></span>
+            <input
+              class="input"
+              id="shopSearchInput"
+              type="search"
+              placeholder="Search products…"
+              style="padding-left: 36px; border-radius: var(--radius-pill)"
+            />
+          </form>
+        </div>
+        <div
+          class="chip-row u-mt-4"
+          id="categoryChips"
+          style="margin-bottom: 28px"
+        ></div>
+        <div class="grid-products" id="productsGrid"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <div><h2>Why ShopSphere</h2></div>
+        </div>
+        <div class="value-grid">
+          <div class="value-card">
+            <div class="ic">🚚</div>
+            <h3>Fast, tracked delivery</h3>
+            <p>
+              Follow every order from placed to delivered right on this site.
+            </p>
+          </div>
+          <div class="value-card">
+            <div class="ic">🔒</div>
+            <h3>Secure by default</h3>
+            <p>Your account and checkout are protected end to end.</p>
+          </div>
+          <div class="value-card">
+            <div class="ic">↩️</div>
+            <h3>Easy returns</h3>
+            <p>
+              Change of mind? Cancel or manage orders anytime from your account.
+            </p>
+          </div>
+          <div class="value-card">
+            <div class="ic">⭐</div>
+            <h3>Real reviews</h3>
+            <p>Ratings from shoppers who've actually bought the product.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="newsletter">
+          <span class="eyebrow">Stay in the loop</span>
+          <h2 class="u-mt-2">Get new arrivals in your inbox</h2>
+          <p class="text-muted u-mt-2">
+            No spam — just the occasional drop worth knowing about.
+          </p>
+          <form class="newsletter-form" id="newsletterForm">
+            <input
+              class="input"
+              type="email"
+              placeholder="you@example.com"
+              required
+            />
+            <button class="btn btn-primary" type="submit">Subscribe</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <div id="site-footer"></div>
+
+    <script src="/assets/js/app.js"></script>
+    <script>
+      SS.renderHeader("home");
+      SS.renderFooter();
+
+      const productsGrid = document.getElementById("productsGrid");
+      const trendingGrid = document.getElementById("trendingGrid");
+      const categoryGrid = document.getElementById("categoryGrid");
+      const categoryChips = document.getElementById("categoryChips");
+      const resultsSummary = document.getElementById("resultsSummary");
+      SS.wireProductGrid(productsGrid);
+      SS.wireProductGrid(trendingGrid);
+
+      let wishlistIds = new Set();
+      let activeCategory = null;
+
+      async function loadWishlistIds() {
+        const user = await SS.getMe();
+        if (!user) return;
+        try {
+          const items = await SS.api("/api/wishlist");
+          wishlistIds = new Set((items || []).map((i) => i.product.id));
+        } catch (e) {
+          /* not logged in */
+        }
+      }
+
+      function renderGrid(el, products) {
+        if (!products.length) {
+          el.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="ic">🔍</div><h3>No products found</h3><p>Try a different search term or clear filters.</p>
+    </div>`;
+          return;
+        }
+        el.innerHTML = products
+          .map((p) => SS.productCardHtml(p, wishlistIds.has(p.id)))
+          .join("");
+      }
+
+      async function loadCategories() {
+        try {
+          const cats = await SS.api("/api/products/categories");
+          document.getElementById("statCategories").textContent = cats.length;
+          const icons = [
+            "👕",
+            "👟",
+            "📱",
+            "🏠",
+            "💄",
+            "🎧",
+            "⌚",
+            "🧴",
+            "🎮",
+            "📚",
+          ];
+          categoryGrid.innerHTML = cats.length
+            ? cats
+                .map(
+                  (c, i) => `
+      <a href="#shop" class="category-card" data-cat="${SS.escapeHtml(c.name)}">
+        <div class="ic">${icons[i % icons.length]}</div>
+        <div class="n">${SS.escapeHtml(c.name)}</div>
+      </a>`,
+                )
+                .join("")
+            : `<p class="text-muted">No categories yet.</p>`;
+          categoryChips.innerHTML =
+            `<button class="chip active" data-cat="">All</button>` +
+            cats
+              .map(
+                (c) =>
+                  `<button class="chip" data-cat="${SS.escapeHtml(c.name)}">${SS.escapeHtml(c.name)}</button>`,
+              )
+              .join("");
+
+          categoryGrid.querySelectorAll("[data-cat]").forEach((el) =>
+            el.addEventListener("click", (e) => {
+              e.preventDefault();
+              setCategory(el.dataset.cat);
+              document
+                .getElementById("shop")
+                .scrollIntoView({ behavior: "smooth" });
+            }),
+          );
+          categoryChips
+            .querySelectorAll(".chip")
+            .forEach((chip) =>
+              chip.addEventListener("click", () =>
+                setCategory(chip.dataset.cat),
+              ),
+            );
+        } catch (e) {
+          categoryGrid.innerHTML = `<p class="text-muted">Couldn't load categories.</p>`;
+        }
+      }
+
+      function setCategory(cat) {
+        activeCategory = cat || null;
+        categoryChips
+          .querySelectorAll(".chip")
+          .forEach((c) =>
+            c.classList.toggle("active", c.dataset.cat === (cat || "")),
+          );
+        loadProducts(document.getElementById("shopSearchInput").value.trim());
+      }
+
+      async function loadProducts(q) {
+        productsGrid.innerHTML = SS.skeletonCards(8);
+        try {
+          const params = new URLSearchParams();
+          if (q) params.set("q", q);
+          else if (activeCategory) params.set("category", activeCategory);
+          const data = await SS.api(
+            "/api/products" +
+              (params.toString() ? "?" + params.toString() : ""),
+          );
+          document.getElementById("statProducts").textContent = data.length;
+          resultsSummary.textContent = q
+            ? `Results for "${q}" — ${data.length} found`
+            : activeCategory
+              ? `${data.length} products in ${activeCategory}`
+              : `${data.length} products available`;
+          renderGrid(productsGrid, data);
+        } catch (e) {
+          productsGrid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="ic">⚠️</div><h3>Couldn't load products</h3><p>${SS.escapeHtml(e.message)}</p></div>`;
+        }
+      }
+
+      async function loadTrending() {
+        try {
+          const data = await SS.api("/api/recommendations");
+          renderGrid(trendingGrid, data);
+        } catch (e) {
+          trendingGrid.innerHTML = "";
+        }
+      }
+
+      document
+        .getElementById("shopSearchForm")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          activeCategory = null;
+          loadProducts(document.getElementById("shopSearchInput").value.trim());
+        });
+
+      document
+        .getElementById("newsletterForm")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          SS.toast("You're on the list!", "success");
+          e.target.reset();
+        });
+
+      (async function init() {
+        const params = new URLSearchParams(location.search);
+        const initialQ = params.get("q") || "";
+        if (initialQ)
+          document.getElementById("shopSearchInput").value = initialQ;
+        await loadWishlistIds();
+        await Promise.all([
+          loadCategories(),
+          loadTrending(),
+          loadProducts(initialQ),
+        ]);
+      })();
+    </script>
+  </body>
+</html>

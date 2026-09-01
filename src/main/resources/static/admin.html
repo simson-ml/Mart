@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ShopSphere | Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+  </head>
+  <body>
+    <div id="site-header"></div>
+
+    <div class="container page-head">
+      <div class="breadcrumbs">
+        <a href="/home.html">Home</a> / <span>Admin</span>
+      </div>
+      <h1>Admin dashboard</h1>
+    </div>
+
+    <div class="container" style="padding-bottom: 80px">
+      <div class="dash-shell">
+        <nav class="dash-sidebar" id="dashNav">
+          <a href="#overview" class="active" data-tab="overview">Overview</a>
+          <a href="#products" data-tab="products">Products</a>
+          <a href="#users" data-tab="users">Users</a>
+          <a href="#orders" data-tab="orders">Orders</a>
+        </nav>
+        <div id="dashContent">
+          <div class="skeleton" style="height: 320px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script src="/assets/js/app.js"></script>
+    <script>
+      SS.renderHeader("admin");
+      SS.renderFooter();
+
+      const content = document.getElementById("dashContent");
+      let dashboard = null;
+
+      function statusBadge(status) {
+        if (status === "DELIVERED")
+          return `<span class="badge badge-success">${status}</span>`;
+        if (status === "CANCELLED")
+          return `<span class="badge badge-error">${status}</span>`;
+        return `<span class="badge badge-primary">${status}</span>`;
+      }
+
+      async function tabOverview() {
+        content.innerHTML = `<div class="skeleton" style="height:280px"></div>`;
+        try {
+          dashboard = await SS.api("/api/admin/dashboard");
+          content.innerHTML = `
+      <div class="stat-grid">
+        <div class="card stat-card"><div class="lbl">Total users</div><div class="val">${dashboard.totalUsers}</div></div>
+        <div class="card stat-card"><div class="lbl">Total products</div><div class="val">${dashboard.totalProducts}</div></div>
+        <div class="card stat-card"><div class="lbl">Total orders</div><div class="val">${dashboard.totalOrders}</div></div>
+      </div>
+      <div class="section-head u-mt-6" style="margin-bottom:16px"><div><h3>Recent orders</h3></div></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody>
+            ${
+              (dashboard.orders || [])
+                .slice(0, 8)
+                .map(
+                  (o) => `
+              <tr>
+                <td>#${o.id}</td>
+                <td>${SS.escapeHtml(o.user ? o.user.name : "—")}</td>
+                <td>${SS.money(o.totalAmount)}</td>
+                <td>${statusBadge(o.status)}</td>
+              </tr>`,
+                )
+                .join("") ||
+              `<tr><td colspan="4" class="text-muted">No orders yet.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>`;
+        } catch (e) {
+          content.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div><h3>Couldn't load dashboard</h3><p>${SS.escapeHtml(e.message)}</p></div>`;
+        }
+      }
+
+      async function tabUsers() {
+        content.innerHTML = `<div class="skeleton" style="height:280px"></div>`;
+        try {
+          const users = await SS.api("/api/admin/users");
+          content.innerHTML = `
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${users
+              .map(
+                (u) => `
+              <tr data-user-id="${u.id}">
+                <td>${SS.escapeHtml(u.name)}</td>
+                <td>${SS.escapeHtml(u.email)}</td>
+                <td><span class="badge badge-muted">${u.role}</span></td>
+                <td>${u.enabled ? `<span class="badge badge-success">Active</span>` : `<span class="badge badge-error">Disabled</span>`}</td>
+                <td><button class="btn btn-secondary btn-sm" data-toggle-user="${u.id}" data-value="${!u.enabled}">${u.enabled ? "Disable" : "Enable"}</button></td>
+              </tr>`,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>`;
+          content.addEventListener(
+            "click",
+            async function handler(e) {
+              const btn = e.target.closest("[data-toggle-user]");
+              if (!btn) return;
+              try {
+                await SS.api(
+                  "/api/admin/users/" +
+                    btn.dataset.toggleUser +
+                    "/enabled?value=" +
+                    btn.dataset.value,
+                  { method: "PUT" },
+                );
+                SS.toast("User updated", "success");
+                tabUsers();
+              } catch (err) {
+                SS.toast(err.message, "error");
+              }
+            },
+            { once: true },
+          );
+        } catch (e) {
+          content.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div><h3>Couldn't load users</h3><p>${SS.escapeHtml(e.message)}</p></div>`;
+        }
+      }
+
+      async function tabOrders() {
+        content.innerHTML = `<div class="skeleton" style="height:280px"></div>`;
+        try {
+          const d = dashboard || (await SS.api("/api/admin/dashboard"));
+          const orders = d.orders || [];
+          content.innerHTML = `
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Order</th><th>Customer</th><th>Address</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody>
+            ${
+              orders
+                .map(
+                  (o) => `
+              <tr>
+                <td>#${o.id}</td>
+                <td>${SS.escapeHtml(o.user ? o.user.name : "—")}</td>
+                <td>${SS.escapeHtml(o.shippingAddress || "—")}</td>
+                <td>${SS.money(o.totalAmount)}</td>
+                <td>${statusBadge(o.status)}</td>
+              </tr>`,
+                )
+                .join("") ||
+              `<tr><td colspan="5" class="text-muted">No orders yet.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>`;
+        } catch (e) {
+          content.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div><h3>Couldn't load orders</h3><p>${SS.escapeHtml(e.message)}</p></div>`;
+        }
+      }
+
+      function productRow(p) {
+        return `
+    <tr data-product-row="${p.id}">
+      <td>${SS.escapeHtml(p.name)}</td>
+      <td>${SS.escapeHtml((p.category && p.category.name) || "—")}</td>
+      <td>${SS.money(p.price)}</td>
+      <td>${p.stock}</td>
+      <td class="u-flex u-gap-2">
+        <button class="btn btn-secondary btn-sm" data-edit-product="${p.id}">Edit</button>
+        <button class="btn btn-danger btn-sm" data-delete-product="${p.id}">Delete</button>
+      </td>
+    </tr>`;
+      }
+
+      function productFormFields(p) {
+        p = p || {};
+        return `
+    <div class="u-flex u-gap-3">
+      <div class="field" style="flex:1"><label>Name</label><input class="input" name="name" value="${SS.escapeHtml(p.name || "")}" required></div>
+      <div class="field" style="flex:1"><label>Category</label><input class="input" name="category" value="${SS.escapeHtml((p.category && p.category.name) || "")}" placeholder="e.g. Electronics"></div>
+    </div>
+    <div class="field"><label>Description</label><textarea class="input" name="description" rows="2">${SS.escapeHtml(p.description || "")}</textarea></div>
+    <div class="u-flex u-gap-3">
+      <div class="field" style="flex:1"><label>Price</label><input class="input" type="number" step="0.01" min="0" name="price" value="${p.price ?? ""}" required></div>
+      <div class="field" style="flex:1"><label>Stock</label><input class="input" type="number" min="0" name="stock" value="${p.stock ?? ""}" required></div>
+    </div>
+    <div class="field"><label>Image URL</label><input class="input" name="imageUrl" value="${SS.escapeHtml(p.imageUrl || "")}" placeholder="https://…"></div>`;
+      }
+
+      async function tabProducts() {
+        content.innerHTML = `<div class="skeleton" style="height:280px"></div>`;
+        let products = [];
+        try {
+          products = await SS.api("/api/products");
+        } catch (e) {}
+
+        content.innerHTML = `
+    <div class="section-head" style="margin-bottom:16px"><div><h3>Catalog</h3><p>${products.length} products</p></div>
+      <button class="btn btn-primary" id="newProductBtn">+ Add product</button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+        <tbody id="productTbody">${products.map(productRow).join("") || `<tr><td colspan="5" class="text-muted">No products yet.</td></tr>`}</tbody>
+      </table>
+    </div>
+    <div class="card u-mt-6" style="padding:var(--sp-6);max-width:560px" id="productFormCard" hidden>
+      <h3 id="productFormTitle">Add product</h3>
+      <form id="productForm" class="u-mt-4">
+        <input type="hidden" name="id">
+        ${productFormFields()}
+        <div class="u-flex u-gap-2 u-mt-2">
+          <button class="btn btn-primary" type="submit">Save product</button>
+          <button class="btn btn-secondary" type="button" id="cancelProductForm">Cancel</button>
+        </div>
+      </form>
+    </div>`;
+
+        const formCard = document.getElementById("productFormCard");
+        const form = document.getElementById("productForm");
+        const title = document.getElementById("productFormTitle");
+
+        document
+          .getElementById("newProductBtn")
+          .addEventListener("click", () => {
+            form.reset();
+            form.id.value = "";
+            title.textContent = "Add product";
+            formCard.hidden = false;
+            formCard.scrollIntoView({ behavior: "smooth" });
+          });
+        document
+          .getElementById("cancelProductForm")
+          .addEventListener("click", () => {
+            formCard.hidden = true;
+          });
+
+        document
+          .getElementById("productTbody")
+          .addEventListener("click", async (e) => {
+            const editBtn = e.target.closest("[data-edit-product]");
+            if (editBtn) {
+              const p = products.find(
+                (x) => String(x.id) === editBtn.dataset.editProduct,
+              );
+              form.reset();
+              form.id.value = p.id;
+              form.name.value = p.name || "";
+              form.category.value = (p.category && p.category.name) || "";
+              form.description.value = p.description || "";
+              form.price.value = p.price ?? "";
+              form.stock.value = p.stock ?? "";
+              form.imageUrl.value = p.imageUrl || "";
+              title.textContent = "Edit product";
+              formCard.hidden = false;
+              formCard.scrollIntoView({ behavior: "smooth" });
+              return;
+            }
+            const delBtn = e.target.closest("[data-delete-product]");
+            if (delBtn) {
+              const ok = await SS.confirmDialog({
+                title: "Delete this product?",
+                body: "This cannot be undone.",
+                confirmLabel: "Delete",
+                danger: true,
+              });
+              if (!ok) return;
+              try {
+                await SS.api("/api/products/" + delBtn.dataset.deleteProduct, {
+                  method: "DELETE",
+                });
+                SS.toast("Product deleted", "info");
+                tabProducts();
+              } catch (err) {
+                SS.toast(err.message, "error");
+              }
+            }
+          });
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fd = new FormData(form);
+          const id = fd.get("id");
+          const category = (fd.get("category") || "").trim();
+          const body = {
+            name: fd.get("name"),
+            description: fd.get("description"),
+            price: Number(fd.get("price")),
+            stock: Number(fd.get("stock")),
+            imageUrl: fd.get("imageUrl"),
+          };
+          try {
+            if (id) {
+              await SS.api("/api/products/" + id, { method: "PUT", body });
+            } else {
+              const params = category
+                ? "?category=" + encodeURIComponent(category)
+                : "";
+              await SS.api("/api/products" + params, { method: "POST", body });
+            }
+            SS.toast("Product saved", "success");
+            tabProducts();
+          } catch (err) {
+            SS.toast(err.message, "error");
+          }
+        });
+      }
+
+      function setActiveTab(tab) {
+        document
+          .querySelectorAll("#dashNav [data-tab]")
+          .forEach((a) => a.classList.toggle("active", a.dataset.tab === tab));
+      }
+
+      async function showTab(tab) {
+        setActiveTab(tab);
+        if (tab === "overview") await tabOverview();
+        else if (tab === "products") await tabProducts();
+        else if (tab === "users") await tabUsers();
+        else if (tab === "orders") await tabOrders();
+      }
+
+      document.getElementById("dashNav").addEventListener("click", (e) => {
+        const a = e.target.closest("[data-tab]");
+        if (!a) return;
+        e.preventDefault();
+        showTab(a.dataset.tab);
+      });
+
+      (async function init() {
+        const user = await SS.requireAuth("/admin.html");
+        if (!user) return;
+        if (user.role !== "ADMIN") {
+          content.innerHTML = `<div class="empty-state"><div class="ic">🔒</div><h3>Admins only</h3><p>You don't have access to this page.</p><a href="/home.html" class="btn btn-primary">Back to shop</a></div>`;
+          document.getElementById("dashNav").style.display = "none";
+          return;
+        }
+        showTab("overview");
+      })();
+    </script>
+  </body>
+</html>

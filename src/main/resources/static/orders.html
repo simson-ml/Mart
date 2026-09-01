@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ShopSphere | Order History</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+  </head>
+  <body>
+    <div id="site-header"></div>
+
+    <div class="container page-head">
+      <div class="breadcrumbs">
+        <a href="/home.html">Home</a> / <span>Orders</span>
+      </div>
+      <h1>Order history</h1>
+    </div>
+
+    <div class="container" style="padding-bottom: 80px">
+      <div id="ordersRoot">
+        <div class="skeleton" style="height: 160px; margin-bottom: 16px"></div>
+        <div class="skeleton" style="height: 160px"></div>
+      </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script src="/assets/js/app.js"></script>
+    <script>
+      SS.renderHeader("orders");
+      SS.renderFooter();
+
+      const FLOW = [
+        "PLACED",
+        "CONFIRMED",
+        "PACKED",
+        "SHIPPED",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+      ];
+      const LABELS = {
+        PLACED: "Placed",
+        CONFIRMED: "Confirmed",
+        PACKED: "Packed",
+        SHIPPED: "Shipped",
+        OUT_FOR_DELIVERY: "Out for delivery",
+        DELIVERED: "Delivered",
+        CANCELLED: "Cancelled",
+      };
+      const root = document.getElementById("ordersRoot");
+      const placedId = new URLSearchParams(location.search).get("placed");
+
+      function statusBadge(status) {
+        if (status === "DELIVERED")
+          return `<span class="badge badge-success">${LABELS[status]}</span>`;
+        if (status === "CANCELLED")
+          return `<span class="badge badge-error">${LABELS[status]}</span>`;
+        return `<span class="badge badge-primary">${LABELS[status] || status}</span>`;
+      }
+
+      function timelineHtml(status) {
+        if (status === "CANCELLED") {
+          return `<p class="text-muted" style="font-size:var(--fs-sm)">This order was cancelled.</p>`;
+        }
+        const idx = FLOW.indexOf(status);
+        return `<div class="timeline">${FLOW.map(
+          (s, i) => `
+    <div class="step ${i <= idx ? "done" : ""}">
+      <div class="dot"></div><span>${LABELS[s]}</span>
+    </div>`,
+        ).join("")}</div>`;
+      }
+
+      function orderCardHtml(o) {
+        const date = o.createdAt
+          ? new Date(o.createdAt).toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
+          : "";
+        const cancellable = !["DELIVERED", "CANCELLED"].includes(o.status);
+        return `
+    <div class="card order-card" data-order-id="${o.id}">
+      <div class="order-head">
+        <div>
+          <div class="order-id">Order #${o.id}</div>
+          <div class="text-faint" style="font-size:var(--fs-xs)">${date} · ${SS.escapeHtml(o.shippingAddress || "No address on file")}</div>
+        </div>
+        <div class="u-flex u-items-center u-gap-3">
+          ${statusBadge(o.status)}
+          <span class="price">${SS.money(o.totalAmount)}</span>
+        </div>
+      </div>
+      ${timelineHtml(o.status)}
+      ${cancellable ? `<button class="btn btn-danger btn-sm u-mt-4" data-cancel="${o.id}">Cancel order</button>` : ""}
+    </div>`;
+      }
+
+      async function load() {
+        const user = await SS.requireAuth("/orders.html");
+        if (!user) return;
+        try {
+          const orders = await SS.api("/api/orders");
+          if (!orders.length) {
+            root.innerHTML = `<div class="empty-state">
+        <div class="ic">📦</div><h3>No orders yet</h3><p>Once you check out, your orders will show up here.</p>
+        <a href="/home.html#shop" class="btn btn-primary">Start shopping</a>
+      </div>`;
+            return;
+          }
+          orders.sort((a, b) => (b.id || 0) - (a.id || 0));
+          root.innerHTML = orders.map(orderCardHtml).join("");
+          if (placedId)
+            SS.toast("Order #" + placedId + " placed successfully!", "success");
+
+          root.addEventListener("click", async (e) => {
+            const btn = e.target.closest("[data-cancel]");
+            if (!btn) return;
+            const ok = await SS.confirmDialog({
+              title: "Cancel this order?",
+              body: "This cannot be undone.",
+              confirmLabel: "Cancel order",
+              danger: true,
+            });
+            if (!ok) return;
+            try {
+              await SS.api("/api/orders/" + btn.dataset.cancel + "/cancel", {
+                method: "POST",
+              });
+              SS.toast("Order cancelled", "info");
+              load();
+            } catch (err) {
+              SS.toast(err.message, "error");
+            }
+          });
+        } catch (e) {
+          root.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div><h3>Couldn't load your orders</h3><p>${SS.escapeHtml(e.message)}</p></div>`;
+        }
+      }
+
+      load();
+    </script>
+  </body>
+</html>
