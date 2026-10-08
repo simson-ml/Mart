@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 Server Error — ShopSphere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="d-flex align-items-center justify-content-center py-5">
+        <div class="container text-center" style="max-width: 600px;">
+            <div class="card border-0 shadow-sm rounded-4 p-5">
+                <i class="bi bi-exclamation-octagon-fill text-danger display-1 mb-3"></i>
+                <h1 class="fw-black text-danger display-4">500</h1>
+                <h3 class="fw-bold text-dark mb-3">Something Went Wrong</h3>
+                <p class="text-muted mb-4" th:text="${errorMessage != null ? errorMessage : 'An unexpected server error occurred while processing your request. Please try again in a few moments.'}">
+                    An internal error occurred.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a th:href="@{/}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="bi bi-house-door-fill me-1"></i> Return Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

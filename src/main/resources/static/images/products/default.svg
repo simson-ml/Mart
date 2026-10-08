@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="gradProductDefault" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F1F5F9" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.08" />
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#gradProductDefault)" rx="16" />
+  <g transform="translate(175, 140)" filter="url(#shadow)">
+    <rect width="150" height="150" rx="30" fill="#2563EB" opacity="0.9" />
+    <path d="M45 45 L105 45 L105 105 L45 105 Z M45 45 L75 25 L135 25 L105 45 M135 25 L135 85 L105 105" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="75" cy="75" r="12" fill="#FFFFFF" />
+  </g>
+  <text x="50%" y="340" font-size="20" font-weight="700" fill="#1E293B" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">SHOPSPHERE</text>
+  <text x="50%" y="370" font-size="14" font-weight="500" fill="#64748B" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Premium Quality Product</text>
+  <text x="50%" y="420" font-size="12" fill="#94A3B8" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Verified Authentic &bull; Official Warranty</text>
+</svg>

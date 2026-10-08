@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="admin-sidebar(activeTab)" class="admin-sidebar p-3 d-flex flex-column">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+        <i class="bi bi-shield-lock-fill text-warning fs-3"></i>
+        <div>
+            <h6 class="text-white fw-bold mb-0">SHOPSPHERE</h6>
+            <small class="text-muted font-monospace">ADMIN CONSOLE</small>
+        </div>
+    </div>
+
+    <nav class="nav flex-column gap-1 flex-grow-1">
+        <a class="admin-nav-link" th:classappend="${activeTab == 'dashboard'} ? 'active' : ''" th:href="@{/admin/dashboard}">
+            <i class="bi bi-speedometer2 text-info"></i> Dashboard Overview
+        </a>
+        <a class="admin-nav-link" th:classappend="${activeTab == 'products'} ? 'active' : ''" th:href="@{/admin/products}">
+            <i class="bi bi-box-seam text-primary"></i> Product Catalog
+        </a>
+        <a class="admin-nav-link" th:classappend="${activeTab == 'categories'} ? 'active' : ''" th:href="@{/admin/categories}">
+            <i class="bi bi-grid text-warning"></i> Categories
+        </a>
+        <a class="admin-nav-link" th:classappend="${activeTab == 'orders'} ? 'active' : ''" th:href="@{/admin/orders}">
+            <i class="bi bi-receipt text-success"></i> Customer Orders
+        </a>
+        <a class="admin-nav-link" th:classappend="${activeTab == 'users'} ? 'active' : ''" th:href="@{/admin/users}">
+            <i class="bi bi-people text-secondary"></i> Users & Customers
+        </a>
+        <a class="admin-nav-link" th:classappend="${activeTab == 'coupons'} ? 'active' : ''" th:href="@{/admin/coupons}">
+            <i class="bi bi-percent text-danger"></i> Discount Coupons
+        </a>
+        <a class="admin-nav-link" th:classappend="${activeTab == 'audit'} ? 'active' : ''" th:href="@{/admin/audit}">
+            <i class="bi bi-journal-text text-light"></i> Security Audit Trail
+        </a>
+    </nav>
+
+    <div class="border-top border-secondary pt-3 mt-auto">
+        <a th:href="@{/}" class="admin-nav-link text-white bg-primary rounded px-3 py-2 text-center d-block mb-2">
+            <i class="bi bi-shop me-1"></i> View Storefront
+        </a>
+        <form th:action="@{/logout}" method="POST">
+            <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded">
+                <i class="bi bi-box-arrow-right me-1"></i> Sign Out
+            </button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

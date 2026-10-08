@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopSphere — Online Shopping Mart</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <!-- Header Fragment -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <!-- Alerts Fragment -->
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+    <main class="py-4">
+        <div class="container">
+
+            <!-- Hero Banner -->
+            <div class="hero-banner shadow-sm mb-5">
+                <div class="row align-items-center position-relative z-1">
+                    <div class="col-lg-7">
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
+                            <i class="bi bi-stars me-1"></i> FESTIVE MEGA SALE 2026
+                        </span>
+                        <h1 class="display-4 fw-black mb-3">
+                            BIG DEALS.<br>
+                            SMART SHOPPING.<br>
+                            <span class="text-warning">BETTER PRICES.</span>
+                        </h1>
+                        <p class="lead text-light mb-4 opacity-90">
+                            Discover authentic smartphones, ultrabooks, fashion, and home appliances with fast express shipping and verified customer ratings.
+                        </p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <a th:href="@{/products}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
+                                <i class="bi bi-bag-check-fill me-2"></i> Shop All Deals
+                            </a>
+                            <a th:href="@{/products(category='mobiles')}" class="btn btn-outline-light btn-lg px-4">
+                                Browse 5G Mobiles
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 d-none d-lg-block text-center">
+                        <img th:src="@{/images/products/samsung-s24.svg}" alt="Hero Banner Featured" class="img-fluid" style="max-height: 280px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.4));">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Grid Section -->
+            <section class="mb-5">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <h3 class="fw-bold mb-1"><i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Shop by Category</h3>
+                        <p class="text-muted mb-0">Explore our wide selection of handpicked product categories</p>
+                    </div>
+                    <a th:href="@{/products}" class="text-primary fw-semibold text-decoration-none">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3">
+                    <div class="col" th:each="cat : ${categories}">
+                        <a th:href="@{/products(category=${cat.slug})}" class="category-card shadow-sm h-100">
+                            <img th:src="${cat.imageUrl != null ? cat.imageUrl : '/images/categories/electronics.svg'}"
+                                 th:alt="${cat.name}"
+                                 loading="lazy">
+                            <div class="fw-bold fs-6" th:text="${cat.name}">Category Name</div>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Flash Deals Section -->
+            <section class="mb-5" th:if="${flashDeals != null and !flashDeals.isEmpty()}">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h3 class="fw-bold mb-0 text-danger"><i class="bi bi-lightning-charge-fill me-1"></i>Flash Deals</h3>
+                            <span class="badge bg-danger">Up to 30% OFF</span>
+                        </div>
+                        <p class="text-muted mb-0">Exclusive discounted products available for limited quantities</p>
+                    </div>
+                    <a th:href="@{/products(minDiscount=15)}" class="text-danger fw-semibold text-decoration-none">
+                        See All Deals <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    <div class="col" th:each="prod : ${flashDeals}">
+                        <div class="product-card shadow-sm">
+                            <div class="product-image-wrap">
+                                <span class="discount-badge" th:if="${prod.discountPercentage > 0}"
+                                      th:text="${#numbers.formatDecimal(prod.discountPercentage, 0, 0)} + '% OFF'">15% OFF</span>
+                                <button type="button" class="wishlist-btn-corner ajax-wishlist-btn"
+                                        th:attr="data-product-id=${prod.id}" title="Add to Wishlist">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                                <a th:href="@{/products/{slug}(slug=${prod.slug})}">
+                                    <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
+                                         th:alt="${prod.name}" loading="lazy">
+                                </a>
+                            </div>
+                            <div class="product-body">
+                                <div class="product-brand" th:text="${prod.brand}">Brand</div>
+                                <a th:href="@{/products/{slug}(slug=${prod.slug})}" class="product-title" th:text="${prod.name}">Product Name</a>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="rating-badge"><i class="bi bi-star-fill"></i> <span th:text="${prod.rating}">4.5</span></span>
+                                    <span class="rating-count" th:text="'(' + ${prod.reviewCount} + ')'">(120)</span>
+                                </div>
+                                <div class="price-box">
+                                    <div class="d-flex align-items-baseline">
+                                        <span class="current-price" th:text="'₹' + ${#numbers.formatDecimal(prod.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
+                                        <span class="original-price" th:if="${prod.discountPercentage > 0}"
+                                              th:text="'₹' + ${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</span>
+                                    </div>
+                                    <form th:action="@{/cart/add}" method="POST" class="mt-3">
+                                        <input type="hidden" name="productId" th:value="${prod.id}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-outline-primary w-100 btn-sm fw-semibold rounded-pill"
+                                                th:disabled="${prod.isOutOfStock()}">
+                                            <i class="bi bi-cart-plus me-1"></i> <span th:text="${prod.isOutOfStock() ? 'Out of Stock' : 'Add to Cart'}">Add to Cart</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Featured Products Section -->
+            <section class="mb-5" th:if="${featuredProducts != null and !featuredProducts.isEmpty()}">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <h3 class="fw-bold mb-1"><i class="bi bi-award-fill text-warning me-2"></i>Featured Products</h3>
+                        <p class="text-muted mb-0">Highest-rated customer favourites across all departments</p>
+                    </div>
+                    <a th:href="@{/products(sortBy='rating')}" class="text-primary fw-semibold text-decoration-none">
+                        Explore More <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    <div class="col" th:each="prod : ${featuredProducts}">
+                        <div class="product-card shadow-sm">
+                            <div class="product-image-wrap">
+                                <span class="discount-badge" th:if="${prod.discountPercentage > 0}"
+                                      th:text="${#numbers.formatDecimal(prod.discountPercentage, 0, 0)} + '% OFF'">15% OFF</span>
+                                <button type="button" class="wishlist-btn-corner ajax-wishlist-btn"
+                                        th:attr="data-product-id=${prod.id}" title="Add to Wishlist">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                                <a th:href="@{/products/{slug}(slug=${prod.slug})}">
+                                    <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
+                                         th:alt="${prod.name}" loading="lazy">
+                                </a>
+                            </div>
+                            <div class="product-body">
+                                <div class="product-brand" th:text="${prod.brand}">Brand</div>
+                                <a th:href="@{/products/{slug}(slug=${prod.slug})}" class="product-title" th:text="${prod.name}">Product Name</a>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="rating-badge"><i class="bi bi-star-fill"></i> <span th:text="${prod.rating}">4.5</span></span>
+                                    <span class="rating-count" th:text="'(' + ${prod.reviewCount} + ')'">(120)</span>
+                                </div>
+                                <div class="price-box">
+                                    <div class="d-flex align-items-baseline">
+                                        <span class="current-price" th:text="'₹' + ${#numbers.formatDecimal(prod.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
+                                        <span class="original-price" th:if="${prod.discountPercentage > 0}"
+                                              th:text="'₹' + ${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</span>
+                                    </div>
+                                    <form th:action="@{/cart/add}" method="POST" class="mt-3">
+                                        <input type="hidden" name="productId" th:value="${prod.id}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-outline-primary w-100 btn-sm fw-semibold rounded-pill"
+                                                th:disabled="${prod.isOutOfStock()}">
+                                            <i class="bi bi-cart-plus me-1"></i> <span th:text="${prod.isOutOfStock() ? 'Out of Stock' : 'Add to Cart'}">Add to Cart</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New Arrivals Section -->
+            <section class="mb-5" th:if="${newArrivals != null and !newArrivals.isEmpty()}">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <h3 class="fw-bold mb-1"><i class="bi bi-sparkles text-info me-2"></i>New Arrivals</h3>
+                        <p class="text-muted mb-0">Fresh releases and recently added inventory</p>
+                    </div>
+                    <a th:href="@{/products(sortBy='newest')}" class="text-primary fw-semibold text-decoration-none">
+                        Browse New <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    <div class="col" th:each="prod : ${newArrivals}">
+                        <div class="product-card shadow-sm">
+                            <div class="product-image-wrap">
+                                <span class="discount-badge" th:if="${prod.discountPercentage > 0}"
+                                      th:text="${#numbers.formatDecimal(prod.discountPercentage, 0, 0)} + '% OFF'">15% OFF</span>
+                                <button type="button" class="wishlist-btn-corner ajax-wishlist-btn"
+                                        th:attr="data-product-id=${prod.id}" title="Add to Wishlist">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                                <a th:href="@{/products/{slug}(slug=${prod.slug})}">
+                                    <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
+                                         th:alt="${prod.name}" loading="lazy">
+                                </a>
+                            </div>
+                            <div class="product-body">
+                                <div class="product-brand" th:text="${prod.brand}">Brand</div>
+                                <a th:href="@{/products/{slug}(slug=${prod.slug})}" class="product-title" th:text="${prod.name}">Product Name</a>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="rating-badge"><i class="bi bi-star-fill"></i> <span th:text="${prod.rating}">4.5</span></span>
+                                    <span class="rating-count" th:text="'(' + ${prod.reviewCount} + ')'">(120)</span>
+                                </div>
+                                <div class="price-box">
+                                    <div class="d-flex align-items-baseline">
+                                        <span class="current-price" th:text="'₹' + ${#numbers.formatDecimal(prod.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
+                                        <span class="original-price" th:if="${prod.discountPercentage > 0}"
+                                              th:text="'₹' + ${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</span>
+                                    </div>
+                                    <form th:action="@{/cart/add}" method="POST" class="mt-3">
+                                        <input type="hidden" name="productId" th:value="${prod.id}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-outline-primary w-100 btn-sm fw-semibold rounded-pill"
+                                                th:disabled="${prod.isOutOfStock()}">
+                                            <i class="bi bi-cart-plus me-1"></i> <span th:text="${prod.isOutOfStock() ? 'Out of Stock' : 'Add to Cart'}">Add to Cart</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Bootstrap 5 JS Bundle & Custom JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Order ' + ${order.orderNumber} + ' — ShopSphere'">Order Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+    <main class="py-4">
+        <div class="container">
+
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/orders}" class="text-decoration-none">My Orders</a></li>
+                    <li class="breadcrumb-item active font-monospace" th:text="${order.orderNumber}">ORD-20261001-9812</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Order Details</h3>
+                    <span class="text-muted small">Placed on <strong th:text="${#temporals.format(order.createdAt, 'dd MMMM yyyy, hh:mm a')}">01 Oct 2026</strong></span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{'/orders/' + ${order.orderNumber} + '/invoice'}" target="_blank" class="btn btn-primary rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Tax Invoice
+                    </a>
+                    <!-- Cancel Order Button (only if eligible) -->
+                    <form th:if="${order.isCancellable()}" th:action="@{/orders/{orderNumber}/cancel(orderNumber=${order.orderNumber})}" method="POST"
+                          onsubmit="return confirm('Are you sure you want to cancel this order? Stock will be restored.');">
+                        <button type="submit" class="btn btn-outline-danger rounded-pill px-3 fw-semibold">
+                            <i class="bi bi-x-circle me-1"></i> Cancel Order
+                        </button>
+                    </form>
+                    <a th:href="@{/orders}" class="btn btn-outline-secondary rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Orders
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left: Visual Timeline & Order Items -->
+                <div class="col-lg-8">
+
+                    <!-- Visual Timeline Card -->
+                    <div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
+                        <h5 class="fw-bold border-bottom pb-3 mb-4">
+                            <i class="bi bi-truck text-primary me-2"></i>Order Tracking Timeline
+                        </h5>
+
+                        <div class="timeline-container px-2">
+                            <div class="timeline-step"
+                                 th:each="step, iterStat : ${timeline}"
+                                 th:classappend="${step.completed ? 'completed' : ''} + ' ' + (${step.current ? 'current' : ''}) + ' ' + (${step.status.name() == 'CANCELLED' ? 'cancelled' : ''})">
+                                
+                                <div class="timeline-icon">
+                                    <i class="bi bi-check-lg" th:if="${step.completed and !step.current and step.status.name() != 'CANCELLED'}"></i>
+                                    <i class="bi bi-circle-fill" th:if="${step.current and step.status.name() != 'CANCELLED'}" style="font-size: 0.5rem;"></i>
+                                    <i class="bi bi-x-lg" th:if="${step.status.name() == 'CANCELLED'}"></i>
+                                    <span th:if="${!step.completed and step.status.name() != 'CANCELLED'}" th:text="${iterStat.count}">1</span>
+                                </div>
+
+                                <div>
+                                    <h6 class="fw-bold mb-1" th:classappend="${step.completed or step.current ? 'text-dark' : 'text-muted'}" th:text="${step.title}">Order Placed</h6>
+                                    <p class="small text-muted mb-0" th:text="${step.description}">Order details...</p>
+                                    <small class="text-primary fw-semibold" th:if="${step.timestamp != null}"
+                                           th:text="${#temporals.format(step.timestamp, 'dd MMM yyyy, hh:mm a')}">01 Oct 2026, 10:30 AM</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Purchased Table -->
+                    <div class="card border-0 shadow-sm rounded-3 p-4">
+                        <h5 class="fw-bold border-bottom pb-3 mb-3">Items in this Order</h5>
+
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3" th:each="item : ${order.items}">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img th:src="${item.productImageUrl != null ? item.productImageUrl : '/images/products/placeholder.svg'}"
+                                         th:alt="${item.productName}" class="rounded bg-white p-1" style="width: 70px; height: 70px; object-fit: contain;">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1" th:text="${item.productName}">Product Name</h6>
+                                        <small class="text-muted d-block" th:text="'SKU: ' + ${item.productSku}">SKU-123</small>
+                                        <small class="text-muted" th:text="'Quantity: ' + ${item.quantity} + ' × ₹' + ${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT')}">Qty: 1 × ₹49,999</small>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold fs-6 text-dark mb-2" th:text="'₹' + ${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT')}">₹49,999</div>
+                                    <div th:if="${order.isDelivered()}">
+                                        <a th:href="@{/products/{slug}#reviews-section(slug=${item.product != null ? item.product.slug : ''})}"
+                                           class="btn btn-outline-warning btn-sm text-dark rounded-pill fw-semibold">
+                                            <i class="bi bi-star-fill text-warning me-1"></i> Write Review
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right: Delivery Address & Payment Summary -->
+                <div class="col-lg-4">
+                    <!-- Delivery Address Card -->
+                    <div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
+                        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-geo-alt-fill text-success me-2"></i>Shipping Address</h6>
+                        <p class="text-secondary small mb-0" style="line-height: 1.6;" th:text="${order.shippingAddressSnapshot}">
+                            Rahul Sharma, Flat 402, Green Acres, Bengaluru...
+                        </p>
+                    </div>
+
+                    <!-- Payment & Price Breakdown -->
+                    <div class="card border-0 shadow-sm rounded-3 p-4">
+                        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-receipt text-primary me-2"></i>Payment Details</h6>
+                        
+                        <div class="mb-3 pb-3 border-bottom">
+                            <div class="d-flex justify-content-between mb-1 small">
+                                <span class="text-muted">Payment Method:</span>
+                                <strong class="text-dark" th:text="${order.paymentMethod.label}">COD</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Payment Status:</span>
+                                <span class="badge" th:classappend="${order.paymentStatus.name() == 'PAID'} ? 'bg-success' : 'bg-warning text-dark'"
+                                      th:text="${order.paymentStatus}">PAID</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 small text-muted">
+                            <span>Items Subtotal:</span>
+                            <span th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 small text-success" th:if="${order.discountAmount > 0}">
+                            <span>Coupon Discount:</span>
+                            <span th:text="'-₹' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT')}">-₹1,000</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 small text-muted">
+                            <span>Delivery Charges:</span>
+                            <span th:text="${order.deliveryCharge == 0 ? 'FREE' : '₹' + order.deliveryCharge}">FREE</span>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between align-items-center fs-5 fw-bold text-dark">
+                            <span>Total Paid / Due:</span>
+                            <span class="text-primary" th:text="'₹' + ${#numbers.formatDecimal(order.netAmount, 0, 'COMMA', 0, 'POINT')}">₹48,999</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>
