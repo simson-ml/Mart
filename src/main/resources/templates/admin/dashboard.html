@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — ShopSphere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-light">
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-lg-2 col-md-3">
+                <div th:replace="~{fragments/admin-sidebar :: admin-sidebar('dashboard')}"></div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-lg-10 col-md-9 p-4">
+                
+                <!-- Alerts Fragment -->
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <!-- Page Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="fw-bold mb-0 text-dark">Executive Dashboard</h3>
+                        <small class="text-muted">Real-time store metrics computed directly from PostgreSQL / JPA database</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/admin/products/new}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">
+                            <i class="bi bi-plus-lg me-1"></i> Add Product
+                        </a>
+                        <a th:href="@{/admin/orders}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+                            <i class="bi bi-box-seam me-1"></i> Manage Orders
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 6 Metric Cards -->
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3 mb-4">
+                    <!-- Total Revenue -->
+                    <div class="col">
+                        <div class="admin-stat-card border-start border-primary border-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold">Total Sales (Revenue)</small>
+                                    <h4 class="fw-bold text-dark mt-1 mb-0" th:text="'₹' + ${#numbers.formatDecimal(stats.totalSales, 0, 'COMMA', 0, 'POINT')}">₹1,75,199</h4>
+                                </div>
+                                <div class="p-3 bg-primary-subtle text-primary rounded-circle">
+                                    <i class="bi bi-currency-rupee fs-3"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Orders -->
+                    <div class="col">
+                        <div class="admin-stat-card border-start border-success border-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold">Total Orders</small>
+                                    <h4 class="fw-bold text-dark mt-1 mb-0" th:text="${stats.totalOrders}">3</h4>
+                                </div>
+                                <div class="p-3 bg-success-subtle text-success rounded-circle">
+                                    <i class="bi bi-receipt fs-3"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Users -->
+                    <div class="col">
+                        <div class="admin-stat-card border-start border-info border-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold">Registered Users</small>
+                                    <h4 class="fw-bold text-dark mt-1 mb-0" th:text="${stats.totalUsers}">5</h4>
+                                </div>
+                                <div class="p-3 bg-info-subtle text-info rounded-circle">
+                                    <i class="bi bi-people-fill fs-3"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Products -->
+                    <div class="col">
+                        <div class="admin-stat-card border-start border-warning border-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold">Active Products</small>
+                                    <h4 class="fw-bold text-dark mt-1 mb-0" th:text="${stats.totalProducts}">35</h4>
+                                </div>
+                                <div class="p-3 bg-warning-subtle text-warning rounded-circle">
+                                    <i class="bi bi-boxes fs-3"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Orders -->
+                    <div class="col">
+                        <div class="admin-stat-card border-start border-danger border-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold">Pending Orders</small>
+                                    <h4 class="fw-bold text-dark mt-1 mb-0" th:text="${stats.pendingOrdersCount}">1</h4>
+                                </div>
+                                <div class="p-3 bg-danger-subtle text-danger rounded-circle">
+                                    <i class="bi bi-hourglass-split fs-3"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Count -->
+                    <div class="col">
+                        <div class="admin-stat-card border-start border-secondary border-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold">Low Stock Items</small>
+                                    <h4 class="fw-bold text-danger mt-1 mb-0" th:text="${stats.lowStockCount}">5</h4>
+                                </div>
+                                <div class="p-3 bg-secondary-subtle text-secondary rounded-circle">
+                                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-7">
+                        <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Sales Performance Trend</h5>
+                            <div style="position: relative; height: 260px;">
+                                <canvas id="salesTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart text-success me-2"></i>Category Product Share</h5>
+                            <div style="position: relative; height: 260px;">
+                                <canvas id="categoryPieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tables Row: Recent Orders & Low Stock Alerts -->
+                <div class="row g-4">
+                    <!-- Recent Orders -->
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm rounded-3 p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0"><i class="bi bi-clock-history text-info me-2"></i>Recent Orders</h5>
+                                <a th:href="@{/admin/orders}" class="small text-decoration-none fw-semibold">View All &rarr;</a>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light small text-muted text-uppercase">
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="ord : ${stats.recentOrders}">
+                                            <td class="font-monospace fw-bold" th:text="${ord.orderNumber}">ORD-001</td>
+                                            <td th:text="${ord.user.name}">Rahul Sharma</td>
+                                            <td class="small" th:text="${#temporals.format(ord.createdAt, 'dd MMM yyyy')}">07 Oct 2026</td>
+                                            <td class="fw-bold" th:text="'₹' + ${#numbers.formatDecimal(ord.netAmount, 0, 'COMMA', 0, 'POINT')}">₹23,992</td>
+                                            <td>
+                                                <span class="badge"
+                                                      th:classappend="${ord.orderStatus.name() == 'DELIVERED'} ? 'bg-success' : (${ord.orderStatus.name() == 'CANCELLED'} ? 'bg-danger' : 'bg-primary')"
+                                                      th:text="${ord.orderStatus.displayName}">Delivered</span>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/admin/orders/{id}(id=${ord.id})}" class="btn btn-outline-primary btn-sm rounded-pill">
+                                                    Manage
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Warnings -->
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm rounded-3 p-4">
+                            <h5 class="fw-bold mb-3 text-danger"><i class="bi bi-shield-exclamation me-2"></i>Low Stock Alerts</h5>
+                            
+                            <div class="d-flex flex-column gap-3">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded" th:each="p : ${stats.lowStockProducts}">
+                                    <div class="text-truncate pe-2">
+                                        <div class="fw-bold small text-dark text-truncate" th:text="${p.name}">Product Name</div>
+                                        <small class="text-muted" th:text="'SKU: ' + ${p.sku}">SKU-123</small>
+                                    </div>
+                                    <span class="badge bg-danger rounded-pill fs-6" th:text="${p.stockQuantity} + ' left'">2 left</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Chart.js initialization script with real server payload -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const categoryData = /*[[${stats.categoryDistribution}]]*/ {};
+        const salesData = /*[[${stats.salesByMonth}]]*/ {};
+
+        // 1. Sales Trend Chart
+        const salesCtx = document.getElementById('salesTrendChart');
+        if (salesCtx) {
+            new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(salesData),
+                    datasets: [{
+                        label: 'Monthly Revenue (₹)',
+                        data: Object.values(salesData),
+                        borderColor: '#1E3A8A',
+                        backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#1E3A8A'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(val) { return '₹' + val.toLocaleString(); }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Category Pie Chart
+        const catCtx = document.getElementById('categoryPieChart');
+        if (catCtx) {
+            new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categoryData),
+                    datasets: [{
+                        data: Object.values(categoryData),
+                        backgroundColor: [
+                            '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981',
+                            '#84CC16', '#06B6D4', '#F43F5E', '#14B8A6', '#6366F1'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

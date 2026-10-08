@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: shopsphere_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: shopspheredb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shopspheredb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: shopsphere_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: shopspheredb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgrespassword
+      ADMIN_NAME: "ShopSphere Administrator"
+      ADMIN_EMAIL: "admin@shopsphere.com"
+      ADMIN_PASSWORD: "Admin@123"
+    volumes:
+      - upload_data:/app/uploads
+
+volumes:
+  pgdata:
+  upload_data:

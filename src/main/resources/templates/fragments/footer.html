@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer th:fragment="footer" class="footer-main">
+    <div class="container">
+        <!-- Trust & Value Props Bar -->
+        <div class="row g-4 pb-4 mb-4 border-bottom border-secondary">
+            <div class="col-md-3 col-sm-6 text-center text-md-start">
+                <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
+                    <i class="bi bi-truck fs-1 text-warning"></i>
+                    <div>
+                        <h6 class="text-white mb-0 fw-bold">Free Shipping</h6>
+                        <small class="text-muted">On all orders above ₹999</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 text-center text-md-start">
+                <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
+                    <i class="bi bi-arrow-counterclockwise fs-1 text-warning"></i>
+                    <div>
+                        <h6 class="text-white mb-0 fw-bold">7-Day Easy Returns</h6>
+                        <small class="text-muted">Hassle-free replacement policy</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 text-center text-md-start">
+                <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
+                    <i class="bi bi-shield-lock-fill fs-1 text-warning"></i>
+                    <div>
+                        <h6 class="text-white mb-0 fw-bold">100% Secure Checkout</h6>
+                        <small class="text-muted">Encrypted transactions</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 text-center text-md-start">
+                <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
+                    <i class="bi bi-headset fs-1 text-warning"></i>
+                    <div>
+                        <h6 class="text-white mb-0 fw-bold">24/7 Support</h6>
+                        <small class="text-muted">Dedicated customer assistance</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Links Grid -->
+        <div class="row g-4 mb-4">
+            <!-- Brand Column -->
+            <div class="col-lg-4 col-md-6">
+                <h5 class="text-white fw-bold mb-3">
+                    SHOPSPHERE <span class="badge bg-warning text-dark fs-6">MART</span>
+                </h5>
+                <p class="text-muted pe-lg-4">
+                    ShopSphere (ShopSphere) is a full-stack next-generation shopping platform delivering thousands of genuine products across electronics, fashion, groceries, and appliances with guaranteed speedy delivery.
+                </p>
+                <div class="d-flex gap-3 fs-5 mt-3">
+                    <a href="#" class="text-muted hover-white"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-muted hover-white"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" class="text-muted hover-white"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-muted hover-white"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="text-muted hover-white"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+
+            <!-- Categories Column -->
+            <div class="col-lg-2 col-md-6 col-6">
+                <h6 class="footer-heading">Top Categories</h6>
+                <a th:href="@{/products(category='mobiles')}" class="footer-link">Mobiles & 5G</a>
+                <a th:href="@{/products(category='laptops')}" class="footer-link">Laptops & PC</a>
+                <a th:href="@{/products(category='electronics')}" class="footer-link">Electronics</a>
+                <a th:href="@{/products(category='fashion')}" class="footer-link">Fashion & Apparel</a>
+                <a th:href="@{/products(category='home-appliances')}" class="footer-link">Home Appliances</a>
+                <a th:href="@{/products(category='groceries')}" class="footer-link">Groceries</a>
+            </div>
+
+            <!-- Customer Service Column -->
+            <div class="col-lg-3 col-md-6 col-6">
+                <h6 class="footer-heading">Customer Service</h6>
+                <a th:href="@{/orders}" class="footer-link">Track Your Orders</a>
+                <a th:href="@{/account/addresses}" class="footer-link">Manage Addresses</a>
+                <a th:href="@{/wishlist}" class="footer-link">My Wishlist</a>
+                <a th:href="@{/cart}" class="footer-link">Shopping Cart</a>
+                <a th:href="@{/swagger-ui.html}" class="footer-link" target="_blank">
+                    <i class="bi bi-code-slash text-info me-1"></i> Developer REST API
+                </a>
+            </div>
+
+            <!-- Contact & Capstone Information -->
+            <div class="col-lg-3 col-md-6">
+                <h6 class="footer-heading">Capstone Information</h6>
+                <p class="text-muted mb-2"><i class="bi bi-mortarboard-fill text-warning me-2"></i> B.Tech AI & Data Science Capstone</p>
+                <p class="text-muted mb-2"><i class="bi bi-layers-fill text-info me-2"></i> Spring Boot 3 + Java 21 + PostgreSQL</p>
+                <p class="text-muted mb-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Bengalore, Karnataka, India</p>
+                <p class="text-muted mb-0"><i class="bi bi-envelope-fill text-success me-2"></i> support@shopsphere.com</p>
+            </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="pt-3 border-top border-secondary text-center text-muted d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <small>&copy; 2026 ShopSphere (ShopSphere) Inc. All rights reserved. Built for College Capstone Project Presentation & Viva.</small>
+            <div class="d-flex gap-3 mt-2 mt-md-0">
+                <small><a href="#" class="text-muted text-decoration-none">Privacy Policy</a></small>
+                <small><a href="#" class="text-muted text-decoration-none">Terms of Service</a></small>
+                <small><a href="#" class="text-muted text-decoration-none">Security</a></small>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

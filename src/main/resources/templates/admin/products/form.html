@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isEdit ? 'Edit Product' : 'Add New Product'} + ' — Admin ShopSphere'">Product Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-light">
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-lg-2 col-md-3">
+                <div th:replace="~{fragments/admin-sidebar :: admin-sidebar('products')}"></div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="col-lg-10 col-md-9 p-4">
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="fw-bold mb-0" th:text="${isEdit ? 'Edit Product' : 'Create New Product'}">Product Form</h3>
+                        <small class="text-muted">Fill in accurate product metadata, pricing, inventory stock, and media</small>
+                    </div>
+                    <a th:href="@{/admin/products}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Products
+                    </a>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-3 p-4">
+                    <form th:action="${isEdit} ? @{/admin/products/update/{id}(id=${productDto.id})} : @{/admin/products/create}"
+                          th:object="${productDto}" method="POST" enctype="multipart/form-data">
+
+                        <div class="row g-3">
+                            <!-- Product Name -->
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Product Title *</label>
+                                <input type="text" th:field="*{name}" class="form-control" placeholder="e.g. Apple iPhone 15 Pro Max (256GB)" required>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</div>
+                            </div>
+
+                            <!-- Category -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Category *</label>
+                                <select th:field="*{categoryId}" class="form-select" required>
+                                    <option value="">Select Category</option>
+                                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Category</option>
+                                </select>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">Error</div>
+                            </div>
+
+                            <!-- Brand -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Brand *</label>
+                                <input type="text" th:field="*{brand}" class="form-control" placeholder="e.g. Apple, Samsung, Sony" required>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('brand')}" th:errors="*{brand}">Error</div>
+                            </div>
+
+                            <!-- SKU Code -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">SKU Identifier *</label>
+                                <input type="text" th:field="*{sku}" class="form-control text-uppercase font-monospace" placeholder="e.g. MOB-APP-IP15-256" required>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('sku')}" th:errors="*{sku}">Error</div>
+                            </div>
+
+                            <!-- Stock Quantity -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Available Stock Quantity *</label>
+                                <input type="number" th:field="*{stockQuantity}" class="form-control" min="0" required>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('stockQuantity')}" th:errors="*{stockQuantity}">Error</div>
+                            </div>
+
+                            <!-- Original Price (MRP) -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Original Price (₹ MRP) *</label>
+                                <input type="number" step="0.01" th:field="*{price}" class="form-control" placeholder="e.g. 59999.00" required>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">Error</div>
+                            </div>
+
+                            <!-- Discount Percentage -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Discount Percentage (% OFF) *</label>
+                                <input type="number" step="0.01" th:field="*{discountPercentage}" class="form-control" min="0" max="99" placeholder="e.g. 15.00" required>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('discountPercentage')}" th:errors="*{discountPercentage}">Error</div>
+                            </div>
+
+                            <!-- Image Upload & Preview -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Upload Product Image (JPG, PNG, WEBP, SVG)</label>
+                                <input type="file" th:field="*{imageFile}" class="form-control image-preview-input" data-preview-target="prodImgPreview" accept="image/*">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Or Image URL / Path</label>
+                                <input type="text" th:field="*{imageUrl}" class="form-control" placeholder="e.g. /images/products/samsung-s24.svg">
+                            </div>
+
+                            <!-- Image Preview Area -->
+                            <div class="col-12 text-center my-2">
+                                <img id="prodImgPreview" th:src="${productDto.imageUrl != null ? productDto.imageUrl : '/images/products/placeholder.svg'}"
+                                     alt="Preview" class="rounded border p-2 bg-light" style="max-height: 120px; object-fit: contain;">
+                            </div>
+
+                            <!-- Full Description -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Full Product Description *</label>
+                                <textarea th:field="*{description}" class="form-control" rows="4" placeholder="Detailed product specifications, key features, and highlights..." required></textarea>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</div>
+                            </div>
+
+                            <!-- Active Visibility -->
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" th:field="*{active}" id="activeSwitch">
+                                    <label class="form-check-label fw-semibold" for="activeSwitch">Make product active and visible on store</label>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="col-12 mt-4 pt-3 border-top d-flex gap-2">
+                                <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                                    <i class="bi bi-check2-circle me-1"></i> <span th:text="${isEdit ? 'Save Changes' : 'Create Product'}">Submit</span>
+                                </button>
+                                <a th:href="@{/admin/products}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

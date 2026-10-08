@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Tax Invoice - ' + ${order.orderNumber} + ' | ShopSphere'">Tax Invoice</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1e293b;
+        }
+        .invoice-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            max-width: 860px;
+            margin: 40px auto;
+        }
+        .brand-title {
+            font-weight: 900;
+            font-size: 1.75rem;
+            letter-spacing: -0.5px;
+            color: #0f172a;
+        }
+        .brand-badge {
+            background: #f59e0b;
+            color: #0f172a;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-left: 6px;
+        }
+        .invoice-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+        }
+        .table thead th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-top: none;
+        }
+        .table td {
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+        @media print {
+            body {
+                background-color: #ffffff;
+            }
+            .invoice-card {
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+                max-width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print max-width-container" style="max-width: 860px; margin: auto;">
+        <a th:href="@{'/orders/' + ${order.orderNumber}}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Order Details
+        </a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm fw-bold">
+            <i class="bi bi-printer me-1"></i> Print / Download PDF
+        </button>
+    </div>
+
+    <div class="invoice-card">
+        <!-- Invoice Header -->
+        <div class="invoice-header d-flex justify-content-between align-items-start">
+            <div>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="brand-title">SHOPSPHERE</span>
+                    <span class="brand-badge">MART</span>
+                </div>
+                <div class="text-muted small">
+                    ShopSphere Technologies Pvt. Ltd.<br>
+                    GSTIN: 29AABCU9603R1ZM<br>
+                    Support: support@shopsphere.com | 1800-SHOPSPHERE
+                </div>
+            </div>
+            <div class="text-end">
+                <h3 class="fw-bold text-dark mb-1">TAX INVOICE</h3>
+                <div class="fw-bold text-primary" th:text="${order.orderNumber}">ORD-20261007-1234</div>
+                <div class="text-muted small" th:text="'Date: ' + ${#temporals.format(order.createdAt, 'dd MMMM yyyy, hh:mm a')}">07 Oct 2026</div>
+            </div>
+        </div>
+
+        <!-- Customer & Order Meta -->
+        <div class="row mb-4">
+            <div class="col-sm-6 mb-3 mb-sm-0">
+                <div class="text-uppercase text-muted fw-bold small mb-1">Billed & Shipped To:</div>
+                <div class="fw-bold text-dark" th:text="${order.user.name}">Customer Name</div>
+                <div class="text-secondary small" th:text="${order.shippingAddressSnapshot}">Address Snapshot</div>
+                <div class="text-secondary small" th:text="'Email: ' + ${order.user.email}">user@example.com</div>
+            </div>
+            <div class="col-sm-6 text-sm-end">
+                <div class="text-uppercase text-muted fw-bold small mb-1">Order Details:</div>
+                <div class="small"><span class="text-muted">Payment Method:</span> <strong th:text="${order.paymentMethod.displayName}">Online</strong></div>
+                <div class="small"><span class="text-muted">Payment Status:</span> <span class="badge bg-success" th:text="${order.paymentStatus}">PAID</span></div>
+                <div class="small"><span class="text-muted">Order Status:</span> <strong th:text="${order.orderStatus.displayName}">Delivered</strong></div>
+                <div class="small" th:if="${order.couponCode}"><span class="text-muted">Coupon Applied:</span> <strong class="text-success" th:text="${order.couponCode}">CODE</strong></div>
+            </div>
+        </div>
+
+        <!-- Itemized Table -->
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 50%;">Item Description</th>
+                    <th class="text-center" style="width: 15%;">SKU</th>
+                    <th class="text-center" style="width: 10%;">Qty</th>
+                    <th class="text-end" style="width: 20%;">Price</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item, stat : ${order.items}">
+                    <td th:text="${stat.count}">1</td>
+                    <td>
+                        <div class="fw-bold text-dark" th:text="${item.productName}">Product Name</div>
+                    </td>
+                    <td class="text-center text-muted small" th:text="${item.productSku}">SKU-123</td>
+                    <td class="text-center" th:text="${item.quantity}">1</td>
+                    <td class="text-end fw-semibold" th:text="'₹' + ${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 2, 'POINT')}">₹49,999.00</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Calculation Breakdown -->
+        <div class="row justify-content-end">
+            <div class="col-md-5">
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <td class="text-muted">Item Total (Subtotal):</td>
+                        <td class="text-end fw-semibold" th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 2, 'POINT')}">₹49,999.00</td>
+                    </tr>
+                    <tr th:if="${order.discountAmount > 0}">
+                        <td class="text-success">Discount / Coupon:</td>
+                        <td class="text-end text-success fw-semibold" th:text="'-₹' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 2, 'POINT')}">-₹5,000.00</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Delivery Charges:</td>
+                        <td class="text-end fw-semibold" th:text="${order.deliveryCharge == 0} ? 'FREE' : '₹' + ${order.deliveryCharge}">FREE</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Estimated Tax (Incl. GST 18%):</td>
+                        <td class="text-end small text-muted" th:text="'₹' + ${#numbers.formatDecimal(order.netAmount.multiply(new java.math.BigDecimal('0.18')), 0, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                    </tr>
+                    <tr class="border-top border-dark">
+                        <td class="fs-5 fw-bold text-dark pt-2">Grand Total:</td>
+                        <td class="fs-5 fw-bold text-primary text-end pt-2" th:text="'₹' + ${#numbers.formatDecimal(order.netAmount, 0, 'COMMA', 2, 'POINT')}">₹44,999.00</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer / Signature -->
+        <div class="border-top pt-4 mt-4 text-center text-muted small">
+            <div>This is a computer-generated tax invoice and requires no physical signature.</div>
+            <div class="mt-1">Thank you for shopping with <strong>ShopSphere</strong>! For support, visit <a href="/" class="text-decoration-none">www.shopsphere.com</a>.</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

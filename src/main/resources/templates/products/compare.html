@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Products — ShopSphere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+    <main class="py-4">
+        <div class="container">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1"><i class="bi bi-arrow-left-right text-primary me-2"></i>Product Comparison</h2>
+                    <p class="text-muted mb-0">Compare specifications, prices, ratings and features side by side.</p>
+                </div>
+                <div th:if="${products != null and not #lists.isEmpty(products)}">
+                    <form th:action="@{/compare/clear}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                            <i class="bi bi-trash3 me-1"></i> Clear Comparison
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${products == null or #lists.isEmpty(products)}" class="card border-0 shadow-sm rounded-4 p-5 text-center my-4">
+                <div class="py-5">
+                    <i class="bi bi-arrow-left-right display-1 text-muted opacity-50 mb-3"></i>
+                    <h3 class="fw-bold text-dark mb-2">No Products in Comparison</h3>
+                    <p class="text-muted mb-4">Browse our catalog and click "Compare" on any product to see side-by-side specifications.</p>
+                    <a th:href="@{/products}" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow">
+                        <i class="bi bi-bag-plus me-2"></i> Browse Products
+                    </a>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div th:if="${products != null and not #lists.isEmpty(products)}" class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0 text-center">
+                        <thead class="bg-light">
+                            <tr>
+                                <th style="width: 20%;" class="text-start p-3 fw-bold text-muted text-uppercase small">Feature</th>
+                                <th th:each="product : ${products}" style="width: 20%;" class="p-3">
+                                    <div class="position-relative">
+                                        <button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 rounded-circle remove-compare-btn"
+                                                th:data-product-id="${product.id}" title="Remove from compare">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                        <img th:src="${product.imageUrl}" th:alt="${product.name}" class="img-fluid rounded mb-2" style="max-height: 140px; object-fit: contain;">
+                                        <h6 class="fw-bold text-dark text-truncate" th:text="${product.name}">Product Name</h6>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Price & Savings -->
+                            <tr>
+                                <td class="text-start fw-bold bg-light ps-3">Selling Price</td>
+                                <td th:each="product : ${products}">
+                                    <div class="fs-5 fw-bold text-primary" th:text="'₹' + ${#numbers.formatDecimal(product.discountedPrice, 0, 'COMMA', 0, 'POINT')}">₹49,999</div>
+                                    <small class="text-muted text-decoration-line-through" th:if="${product.discountPercentage > 0}" th:text="'₹' + ${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</small>
+                                    <span class="badge bg-success-subtle text-success ms-1" th:if="${product.discountPercentage > 0}" th:text="${#numbers.formatDecimal(product.discountPercentage, 0, 'NONE', 0, 'POINT')} + '% OFF'">15% OFF</span>
+                                </td>
+                            </tr>
+                            <!-- Brand -->
+                            <tr>
+                                <td class="text-start fw-bold bg-light ps-3">Brand</td>
+                                <td th:each="product : ${products}">
+                                    <span class="badge bg-secondary-subtle text-dark px-3 py-1 fs-6" th:text="${product.brand}">Samsung</span>
+                                </td>
+                            </tr>
+                            <!-- Category -->
+                            <tr>
+                                <td class="text-start fw-bold bg-light ps-3">Category</td>
+                                <td th:each="product : ${products}" th:text="${product.category.name}">Electronics</td>
+                            </tr>
+                            <!-- Rating -->
+                            <tr>
+                                <td class="text-start fw-bold bg-light ps-3">Customer Rating</td>
+                                <td th:each="product : ${products}">
+                                    <span class="badge bg-success fw-bold px-2 py-1">
+                                        <i class="bi bi-star-fill me-1"></i> <span th:text="${product.rating}">4.8</span>
+                                    </span>
+                                    <div class="text-muted small mt-1" th:text="'(' + ${product.reviewCount} + ' reviews)'">(142 reviews)</div>
+                                </td>
+                            </tr>
+                            <!-- Availability -->
+                            <tr>
+                                <td class="text-start fw-bold bg-light ps-3">Stock Status</td>
+                                <td th:each="product : ${products}">
+                                    <span class="badge bg-success-subtle text-success" th:if="${product.stockQuantity > 5}">In Stock (<span th:text="${product.stockQuantity}">10</span> available)</span>
+                                    <span class="badge bg-warning-subtle text-warning" th:if="${product.stockQuantity > 0 and product.stockQuantity <= 5}">Only <span th:text="${product.stockQuantity}">2</span> left!</span>
+                                    <span class="badge bg-danger-subtle text-danger" th:if="${product.stockQuantity == 0}">Out of Stock</span>
+                                </td>
+                            </tr>
+                            <!-- SKU -->
+                            <tr>
+                                <td class="text-start fw-bold bg-light ps-3">Model SKU</td>
+                                <td th:each="product : ${products}" class="font-monospace text-muted small" th:text="${product.sku}">SKU-1234</td>
+                            </tr>
+                            <!-- Description Summary -->
+                            <tr>
+                                <td class="text-start fw-bold bg-light ps-3">Key Highlights</td>
+                                <td th:each="product : ${products}" class="text-muted small text-start p-3" th:text="${product.description}">Product description text</td>
+                            </tr>
+                            <!-- Actions -->
+                            <tr>
+                                <td class="text-start fw-bold bg-light ps-3">Action</td>
+                                <td th:each="product : ${products}" class="p-3">
+                                    <form th:action="@{/cart/add}" method="POST">
+                                        <input type="hidden" name="productId" th:value="${product.id}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold rounded-pill text-dark" th:disabled="${product.stockQuantity == 0}">
+                                            <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                                        </button>
+                                    </form>
+                                    <a th:href="@{'/products/' + ${product.slug}}" class="btn btn-outline-primary btn-sm w-100 rounded-pill mt-2">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script>
+        document.querySelectorAll('.remove-compare-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const pid = this.getAttribute('data-product-id');
+                fetch(`/api/compare/remove/${pid}`, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(res => {
+                        window.location.reload();
+                    });
+            });
+        });
+    </script>
+</body>
+</html>

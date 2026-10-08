@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management — Admin ShopSphere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-light">
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-lg-2 col-md-3">
+                <div th:replace="~{fragments/admin-sidebar :: admin-sidebar('products')}"></div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="col-lg-10 col-md-9 p-4">
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="fw-bold mb-0">Product Catalog Management</h3>
+                        <small class="text-muted">Manage inventory, prices, discounts, and item visibility</small>
+                    </div>
+                    <a th:href="@{/admin/products/new}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="bi bi-plus-lg me-1"></i> Add New Product
+                    </a>
+                </div>
+
+                <!-- Filters & Search -->
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-4">
+                    <form th:action="@{/admin/products}" method="GET" class="row g-3 align-items-center">
+                        <div class="col-md-5">
+                            <input type="text" name="keyword" class="form-control form-control-sm" placeholder="Search by name, SKU, or brand..." th:value="${keyword}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="category" class="form-select form-select-sm" onchange="this.form.submit();">
+                                <option value="">All Categories</option>
+                                <option th:each="cat : ${categories}" th:value="${cat.slug}" th:text="${cat.name}"
+                                        th:selected="${selectedCategory == cat.slug}">Category</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100 fw-semibold">
+                                <i class="bi bi-search me-1"></i> Search
+                            </button>
+                            <a th:href="@{/admin/products}" class="btn btn-outline-secondary btn-sm rounded-pill">Reset</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light small text-muted text-uppercase">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Image</th>
+                                    <th>Product Details</th>
+                                    <th>Category</th>
+                                    <th>Selling Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="prod : ${productsPage.content}">
+                                    <td class="font-monospace text-muted" th:text="${prod.id}">1</td>
+                                    <td>
+                                        <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
+                                             th:alt="${prod.name}" class="rounded bg-light p-1" style="width: 50px; height: 50px; object-fit: contain;">
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark text-truncate" style="max-width: 250px;" th:text="${prod.name}">Product Name</div>
+                                        <small class="text-muted font-monospace" th:text="'SKU: ' + ${prod.sku}">SKU-123</small>
+                                        <small class="text-muted" th:text="' | Brand: ' + ${prod.brand}">Brand</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${prod.category.name}">Category</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark" th:text="'₹' + ${#numbers.formatDecimal(prod.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}">₹49,999</div>
+                                        <small class="text-success" th:if="${prod.discountPercentage > 0}" th:text="${prod.discountPercentage} + '% off'">10% off</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${prod.isOutOfStock()} ? 'bg-danger' : (${prod.isLowStock()} ? 'bg-warning text-dark' : 'bg-success')"
+                                              th:text="${prod.stockQuantity} + ' units'">20 units</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${prod.active} ? 'bg-success' : 'bg-secondary'"
+                                              th:text="${prod.active ? 'Active' : 'Hidden'}">Active</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a th:href="@{/admin/products/edit/{id}(id=${prod.id})}" class="btn btn-outline-primary" title="Edit Product">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-info" title="Quick Stock Update"
+                                                    data-bs-toggle="modal" th:attr="data-bs-target='#stockModal-' + ${prod.id}">
+                                                <i class="bi bi-stack"></i>
+                                            </button>
+                                            <form th:action="@{/admin/products/toggle/{id}(id=${prod.id})}" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-secondary" th:title="${prod.active ? 'Deactivate' : 'Activate'}">
+                                                    <i class="bi" th:classappend="${prod.active ? 'bi-eye-slash' : 'bi-eye'}"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <!-- Quick Stock Update Modal -->
+                                        <div class="modal fade text-start" th:id="'stockModal-' + ${prod.id}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-sm">
+                                                <div class="modal-content border-0 shadow">
+                                                    <div class="modal-header border-bottom">
+                                                        <h6 class="modal-title fw-bold">Update Stock Quantity</h6>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <form th:action="@{/admin/products/stock/{id}(id=${prod.id})}" method="POST">
+                                                        <div class="modal-body">
+                                                            <label class="form-label small fw-semibold" th:text="${prod.name}">Product Name</label>
+                                                            <input type="number" name="stockQuantity" class="form-control" th:value="${prod.stockQuantity}" min="0" required>
+                                                        </div>
+                                                        <div class="modal-footer border-top">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-primary btn-sm fw-bold">Save Stock</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div th:replace="~{fragments/pagination :: pagination(${productsPage}, '/admin/products')}"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>
