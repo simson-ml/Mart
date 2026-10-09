@@ -91,17 +91,32 @@
                             <div class="row g-3" style="max-width: 500px;">
                                 <div class="col-12">
                                     <label class="form-label fw-semibold">Current Password *</label>
-                                    <input type="password" th:field="*{currentPassword}" class="form-control" required>
+                                    <div class="input-group">
+                                        <input type="password" th:field="*{currentPassword}" class="form-control" required>
+                                        <button type="button" class="btn btn-outline-secondary toggle-password-btn" title="Show or hide password" aria-label="Toggle password visibility">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                     <div class="text-danger small" th:if="${#fields.hasErrors('currentPassword')}" th:errors="*{currentPassword}">Error</div>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-semibold">New Password *</label>
-                                    <input type="password" th:field="*{newPassword}" class="form-control" required>
+                                    <div class="input-group">
+                                        <input type="password" th:field="*{newPassword}" class="form-control" required>
+                                        <button type="button" class="btn btn-outline-secondary toggle-password-btn" title="Show or hide password" aria-label="Toggle password visibility">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                     <div class="text-danger small" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}">Error</div>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-semibold">Confirm New Password *</label>
-                                    <input type="password" th:field="*{confirmPassword}" class="form-control" required>
+                                    <div class="input-group">
+                                        <input type="password" th:field="*{confirmPassword}" class="form-control" required>
+                                        <button type="button" class="btn btn-outline-secondary toggle-password-btn" title="Show or hide password" aria-label="Toggle password visibility">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                     <div class="text-danger small" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">Error</div>
                                 </div>
                                 <div class="col-12 mt-4">

@@ -38,6 +38,15 @@ public class AddressController {
         return "account/addresses";
     }
 
+    @GetMapping("/add")
+    public String showAddAddressForm(Model model) {
+        if (!model.containsAttribute("addressDto")) {
+            model.addAttribute("addressDto", new AddressDto());
+        }
+        model.addAttribute("editMode", false);
+        return "account/add-address";
+    }
+
     @PostMapping("/add")
     public String addAddress(
             @Valid @ModelAttribute("addressDto") AddressDto addressDto,
@@ -47,13 +56,39 @@ public class AddressController {
     ) {
         User user = userService.getCurrentAuthenticatedUser();
         if (bindingResult.hasErrors()) {
-            model.addAttribute("addresses", addressService.getUserAddresses(user));
-            return "account/addresses";
+            return "account/add-address";
         }
 
         addressService.createAddress(user, addressDto);
         redirectAttributes.addFlashAttribute("successMessage", "Address added successfully!");
         return "redirect:/account/addresses";
+    }
+
+    @GetMapping("/edit/{id}")
+    public String showEditAddressForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        User user = userService.getCurrentAuthenticatedUser();
+        try {
+            Address address = addressService.getAddressById(id, user);
+            AddressDto dto = AddressDto.builder()
+                    .id(address.getId())
+                    .fullName(address.getFullName())
+                    .phone(address.getPhone())
+                    .addressLine1(address.getAddressLine1())
+                    .addressLine2(address.getAddressLine2())
+                    .city(address.getCity())
+                    .state(address.getState())
+                    .pincode(address.getPincode())
+                    .addressType(address.getAddressType())
+                    .defaultAddress(address.isDefault())
+                    .build();
+            model.addAttribute("addressDto", dto);
+            model.addAttribute("editMode", true);
+            model.addAttribute("addressId", id);
+            return "account/add-address";
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/account/addresses";
+        }
     }
 
     @PostMapping("/edit/{id}")
@@ -66,8 +101,9 @@ public class AddressController {
     ) {
         User user = userService.getCurrentAuthenticatedUser();
         if (bindingResult.hasErrors()) {
-            model.addAttribute("addresses", addressService.getUserAddresses(user));
-            return "account/addresses";
+            model.addAttribute("editMode", true);
+            model.addAttribute("addressId", id);
+            return "account/add-address";
         }
 
         addressService.updateAddress(id, user, addressDto);

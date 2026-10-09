@@ -6,6 +6,8 @@
     <title>Secure Checkout — ShopSphere</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
@@ -134,13 +136,27 @@
                                     </div>
                                 </div>
 
+                                <!-- UPI / QR Code Payment -->
+                                <div class="card border p-3 rounded-3 border-primary-subtle bg-primary-subtle bg-opacity-10">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{paymentMethod}" value="UPI" id="payUPI">
+                                        <label class="form-check-label w-100" for="payUPI">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong class="text-dark"><i class="bi bi-qr-code-scan text-primary me-2"></i> UPI / QR Code (GPay, PhonePe, Paytm, BHIM)</strong>
+                                                <span class="badge bg-primary text-white">Recommended</span>
+                                            </div>
+                                            <div class="text-muted small mt-1">Pay instantly using any UPI app (VPA: <strong>simson2610@nyes</strong>) or dynamic QR code.</div>
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <!-- Mock Online Payment -->
                                 <div class="card border p-3 rounded-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" th:field="*{paymentMethod}" value="ONLINE_MOCK" id="payOnline">
                                         <label class="form-check-label w-100" for="payOnline">
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <strong class="text-dark"><i class="bi bi-credit-card-2-front-fill text-primary me-2"></i> Mock Online Payment (UPI / Cards / NetBanking)</strong>
+                                                <strong class="text-dark"><i class="bi bi-credit-card-2-front-fill text-primary me-2"></i> Mock Online Payment (Cards / NetBanking)</strong>
                                                 <span class="badge bg-info-subtle text-info">Instant Simulation</span>
                                             </div>
                                             <div class="text-muted small mt-1">Simulated instant gateway transaction for Capstone Demo & Viva testing.</div>
@@ -244,11 +260,29 @@
                 return;
             }
 
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') 
+                || (document.cookie.match(/XSRF-TOKEN=([^;]+)/) ? RegExp.$1 : '');
+
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '/account/addresses/add';
 
-            const fields = { fullName, phone, addressLine1, addressLine2, city, state, pincode, addressType, isDefault: 'true' };
+            const fields = { 
+                fullName, 
+                phone, 
+                addressLine1, 
+                addressLine2, 
+                city, 
+                state, 
+                pincode, 
+                addressType, 
+                default: 'true' 
+            };
+
+            if (csrfToken) {
+                fields['_csrf'] = csrfToken;
+            }
+
             for (const key in fields) {
                 const input = document.createElement('input');
                 input.type = 'hidden';

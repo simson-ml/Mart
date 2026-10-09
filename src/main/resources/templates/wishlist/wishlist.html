@@ -44,7 +44,9 @@
                             </form>
                             <a th:href="@{/products/{slug}(slug=${prod.slug})}">
                                 <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
-                                     th:alt="${prod.name}" loading="lazy">
+                                     th:alt="${prod.name}"
+                                     onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                     loading="lazy">
                             </a>
                         </div>
                         <div class="product-body">

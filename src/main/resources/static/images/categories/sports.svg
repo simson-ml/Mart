@@ -1,13 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
   <defs>
     <linearGradient id="grad-sports" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#14B8A6" />
-      <stop offset="100%" stop-color="#0F766E" />
+      <stop offset="0%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#C2410C" />
     </linearGradient>
   </defs>
   <rect width="100%" height="100%" rx="16" fill="url(#grad-sports)"/>
-  <circle cx="200" cy="120" r="60" fill="rgba(255,255,255,0.15)"/>
-  <text x="50%" y="135" font-size="54" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">???</text>
-  <text x="50%" y="220" font-size="24" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Sports & Fitness</text>
-  <text x="50%" y="245" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Shop Collection &rarr;</text>
+  <circle cx="200" cy="115" r="54" fill="rgba(255,255,255,0.18)"/>
+  <g transform="translate(160, 75)">
+    <circle cx="40" cy="40" r="26" fill="none" stroke="#FFFFFF" stroke-width="4"/><path d="M22 22 C34 34 34 46 22 58 M58 22 C46 34 46 46 58 58 M14 40 L66 40" stroke="#FFFFFF" stroke-width="3"/>
+  </g>
+  <text x="50%" y="210" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Sports</text>
+  <text x="50%" y="240" font-size="14" fill="rgba(255,255,255,0.85)" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Fitness & Outdoors</text>
 </svg>

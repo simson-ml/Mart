@@ -29,13 +29,13 @@
                         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
                             <i class="bi bi-stars me-1"></i> FESTIVE MEGA SALE 2026
                         </span>
-                        <h1 class="display-4 fw-black mb-3">
+                        <h1 class="display-4 fw-black mb-3 text-white">
                             BIG DEALS.<br>
                             SMART SHOPPING.<br>
                             <span class="text-warning">BETTER PRICES.</span>
                         </h1>
                         <p class="lead text-light mb-4 opacity-90">
-                            Discover authentic smartphones, ultrabooks, fashion, and home appliances with fast express shipping and verified customer ratings.
+                            Discover authentic smartphones, ultrabooks, luxury fashion, and home appliances with fast express shipping and verified customer ratings.
                         </p>
                         <div class="d-flex flex-wrap gap-3">
                             <a th:href="@{/products}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
@@ -47,7 +47,9 @@
                         </div>
                     </div>
                     <div class="col-lg-5 d-none d-lg-block text-center">
-                        <img th:src="@{/images/products/samsung-s24.svg}" alt="Hero Banner Featured" class="img-fluid" style="max-height: 280px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.4));">
+                        <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=600&q=80"
+                             onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                             alt="Hero Banner Featured" class="img-fluid rounded-4 shadow-lg" style="max-height: 280px; object-fit: cover;">
                     </div>
                 </div>
             </div>
@@ -60,16 +62,19 @@
                         <p class="text-muted mb-0">Explore our wide selection of handpicked product categories</p>
                     </div>
                     <a th:href="@{/products}" class="text-primary fw-semibold text-decoration-none">
-                        View All <i class="bi bi-arrow-right"></i>
+                        View All Categories <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
 
                 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3">
                     <div class="col" th:each="cat : ${categories}">
                         <a th:href="@{/products(category=${cat.slug})}" class="category-card shadow-sm h-100">
-                            <img th:src="${cat.imageUrl != null ? cat.imageUrl : '/images/categories/electronics.svg'}"
-                                 th:alt="${cat.name}"
-                                 loading="lazy">
+                            <div class="cat-img-wrapper">
+                                <img th:src="${cat.imageUrl != null ? cat.imageUrl : '/images/categories/default.svg'}"
+                                     th:alt="${cat.name}"
+                                     onerror="this.onerror=null; this.src='/images/categories/default.svg';"
+                                     loading="lazy">
+                            </div>
                             <div class="fw-bold fs-6" th:text="${cat.name}">Category Name</div>
                         </a>
                     </div>
@@ -103,7 +108,9 @@
                                 </button>
                                 <a th:href="@{/products/{slug}(slug=${prod.slug})}">
                                     <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
-                                         th:alt="${prod.name}" loading="lazy">
+                                         th:alt="${prod.name}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         loading="lazy">
                                 </a>
                             </div>
                             <div class="product-body">
@@ -119,7 +126,8 @@
                                         <span class="original-price" th:if="${prod.discountPercentage > 0}"
                                               th:text="'₹' + ${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</span>
                                     </div>
-                                    <form th:action="@{/cart/add}" method="POST" class="mt-3">
+                                    <form action="/cart/add" method="POST" class="mt-3 ajax-cart-form">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}">
                                         <input type="hidden" name="productId" th:value="${prod.id}">
                                         <input type="hidden" name="quantity" value="1">
                                         <button type="submit" class="btn btn-outline-primary w-100 btn-sm fw-semibold rounded-pill"
@@ -158,7 +166,9 @@
                                 </button>
                                 <a th:href="@{/products/{slug}(slug=${prod.slug})}">
                                     <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
-                                         th:alt="${prod.name}" loading="lazy">
+                                         th:alt="${prod.name}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         loading="lazy">
                                 </a>
                             </div>
                             <div class="product-body">
@@ -174,7 +184,69 @@
                                         <span class="original-price" th:if="${prod.discountPercentage > 0}"
                                               th:text="'₹' + ${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</span>
                                     </div>
-                                    <form th:action="@{/cart/add}" method="POST" class="mt-3">
+                                    <form action="/cart/add" method="POST" class="mt-3 ajax-cart-form">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}">
+                                        <input type="hidden" name="productId" th:value="${prod.id}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-outline-primary w-100 btn-sm fw-semibold rounded-pill"
+                                                th:disabled="${prod.isOutOfStock()}">
+                                            <i class="bi bi-cart-plus me-1"></i> <span th:text="${prod.isOutOfStock() ? 'Out of Stock' : 'Add to Cart'}">Add to Cart</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trending & Best Sellers Section -->
+            <section class="mb-5" th:if="${trendingProducts != null and !trendingProducts.isEmpty()}">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h3 class="fw-bold mb-0 text-success"><i class="bi bi-fire text-danger me-1"></i>Trending & Best Sellers</h3>
+                            <span class="badge bg-success">Popular Choices</span>
+                        </div>
+                        <p class="text-muted mb-0">Most popular choices bought by thousands of customers</p>
+                    </div>
+                    <a th:href="@{/products(sortBy='popular')}" class="text-success fw-semibold text-decoration-none">
+                        View All Trending <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    <div class="col" th:each="prod : ${trendingProducts}">
+                        <div class="product-card shadow-sm">
+                            <div class="product-image-wrap">
+                                <span class="discount-badge" th:if="${prod.discountPercentage > 0}"
+                                      th:text="${#numbers.formatDecimal(prod.discountPercentage, 0, 0)} + '% OFF'">15% OFF</span>
+                                <button type="button" class="wishlist-btn-corner ajax-wishlist-btn"
+                                        th:attr="data-product-id=${prod.id}" title="Add to Wishlist">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                                <a th:href="@{/products/{slug}(slug=${prod.slug})}">
+                                    <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
+                                         th:alt="${prod.name}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         loading="lazy">
+                                </a>
+                            </div>
+                            <div class="product-body">
+                                <div class="product-brand" th:text="${prod.brand}">Brand</div>
+                                <a th:href="@{/products/{slug}(slug=${prod.slug})}" class="product-title" th:text="${prod.name}">Product Name</a>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="rating-badge"><i class="bi bi-star-fill"></i> <span th:text="${prod.rating}">4.5</span></span>
+                                    <span class="rating-count" th:text="'(' + ${prod.reviewCount} + ')'">(120)</span>
+                                </div>
+                                <div class="price-box">
+                                    <div class="d-flex align-items-baseline">
+                                        <span class="current-price" th:text="'₹' + ${#numbers.formatDecimal(prod.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
+                                        <span class="original-price" th:if="${prod.discountPercentage > 0}"
+                                              th:text="'₹' + ${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</span>
+                                    </div>
+                                    <form action="/cart/add" method="POST" class="mt-3 ajax-cart-form">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}">
                                         <input type="hidden" name="productId" th:value="${prod.id}">
                                         <input type="hidden" name="quantity" value="1">
                                         <button type="submit" class="btn btn-outline-primary w-100 btn-sm fw-semibold rounded-pill"
@@ -213,7 +285,9 @@
                                 </button>
                                 <a th:href="@{/products/{slug}(slug=${prod.slug})}">
                                     <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
-                                         th:alt="${prod.name}" loading="lazy">
+                                         th:alt="${prod.name}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         loading="lazy">
                                 </a>
                             </div>
                             <div class="product-body">
@@ -229,7 +303,8 @@
                                         <span class="original-price" th:if="${prod.discountPercentage > 0}"
                                               th:text="'₹' + ${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</span>
                                     </div>
-                                    <form th:action="@{/cart/add}" method="POST" class="mt-3">
+                                    <form action="/cart/add" method="POST" class="mt-3 ajax-cart-form">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}">
                                         <input type="hidden" name="productId" th:value="${prod.id}">
                                         <input type="hidden" name="quantity" value="1">
                                         <button type="submit" class="btn btn-outline-primary w-100 btn-sm fw-semibold rounded-pill"
@@ -238,6 +313,48 @@
                                         </button>
                                     </form>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ShopSphere Trust & Value Features -->
+            <section class="mt-5 pt-3 mb-4">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+                    <div class="col">
+                        <div class="p-3 bg-white rounded-3 border d-flex align-items-center gap-3 shadow-sm h-100">
+                            <div class="fs-2 text-primary"><i class="bi bi-truck"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Fast Delivery</h6>
+                                <p class="text-muted small mb-0">Free shipping on orders above ₹499</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-3 bg-white rounded-3 border d-flex align-items-center gap-3 shadow-sm h-100">
+                            <div class="fs-2 text-success"><i class="bi bi-shield-check"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">100% Authentic</h6>
+                                <p class="text-muted small mb-0">Direct from certified brands & stores</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-3 bg-white rounded-3 border d-flex align-items-center gap-3 shadow-sm h-100">
+                            <div class="fs-2 text-warning"><i class="bi bi-arrow-counterclockwise"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">7 Days Return</h6>
+                                <p class="text-muted small mb-0">Hassle-free replacement policy</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-3 bg-white rounded-3 border d-flex align-items-center gap-3 shadow-sm h-100">
+                            <div class="fs-2 text-info"><i class="bi bi-headset"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">24/7 Support</h6>
+                                <p class="text-muted small mb-0">Dedicated assistance anytime</p>
                             </div>
                         </div>
                     </div>

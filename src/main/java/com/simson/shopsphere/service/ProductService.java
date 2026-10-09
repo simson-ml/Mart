@@ -25,6 +25,7 @@ public interface ProductService {
 
     List<Product> getFeaturedProducts();
     List<Product> getTrendingProducts();
+    List<Product> getBestSellers();
     List<Product> getFlashDeals();
     List<Product> getNewArrivals();
     List<Product> getRelatedProducts(Product product);

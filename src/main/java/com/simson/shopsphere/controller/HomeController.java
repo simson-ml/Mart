@@ -29,12 +29,14 @@ public class HomeController {
         List<Product> flashDeals = productService.getFlashDeals();
         List<Product> featured = productService.getFeaturedProducts();
         List<Product> trending = productService.getTrendingProducts();
+        List<Product> bestSellers = productService.getBestSellers();
         List<Product> newArrivals = productService.getNewArrivals();
 
         model.addAttribute("categories", categories);
         model.addAttribute("flashDeals", flashDeals);
         model.addAttribute("featuredProducts", featured);
         model.addAttribute("trendingProducts", trending);
+        model.addAttribute("bestSellers", bestSellers);
         model.addAttribute("newArrivals", newArrivals);
 
         return "index";

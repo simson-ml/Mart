@@ -113,12 +113,21 @@ public class CheckoutController {
             session.removeAttribute(CHECKOUT_IDEMPOTENCY_TOKEN);
             Order order = orderService.placeOrder(user, checkoutRequest);
             session.removeAttribute(APPLIED_COUPON_SESSION_KEY);
+
+            if (order.getPaymentMethod() == PaymentMethod.UPI) {
+                return "redirect:/orders/" + order.getOrderNumber() + "/payment";
+            }
             return "redirect:/orders/confirmation/" + order.getOrderNumber();
         } catch (Exception e) {
             log.error("Failed to place order for user: {}", user.getEmail(), e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/checkout";
         }
+    }
+
+    @GetMapping("/checkout/payment/{orderNumber}")
+    public String checkoutPaymentRedirect(@PathVariable String orderNumber) {
+        return "redirect:/orders/" + orderNumber + "/payment";
     }
 
     @PostMapping("/checkout/address/save-and-select")

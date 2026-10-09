@@ -1,13 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
   <defs>
     <linearGradient id="grad-books" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366F1" />
-      <stop offset="100%" stop-color="#4338CA" />
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
     </linearGradient>
   </defs>
   <rect width="100%" height="100%" rx="16" fill="url(#grad-books)"/>
-  <circle cx="200" cy="120" r="60" fill="rgba(255,255,255,0.15)"/>
-  <text x="50%" y="135" font-size="54" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">??</text>
-  <text x="50%" y="220" font-size="24" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Books & Media</text>
-  <text x="50%" y="245" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Shop Collection &rarr;</text>
+  <circle cx="200" cy="115" r="54" fill="rgba(255,255,255,0.18)"/>
+  <g transform="translate(160, 75)">
+    <path d="M16 20 C24 16 36 16 40 22 C44 16 56 16 64 20 L64 60 C56 56 44 56 40 62 C36 56 24 56 16 60 Z" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/><line x1="40" y1="22" x2="40" y2="62" stroke="#FFFFFF" stroke-width="3"/>
+  </g>
+  <text x="50%" y="210" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Books</text>
+  <text x="50%" y="240" font-size="14" fill="rgba(255,255,255,0.85)" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Bestsellers & Guides</text>
 </svg>

@@ -92,13 +92,19 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<Product> getTrendingProducts() {
-        return productRepository.findTop8ByActiveTrueOrderByRatingDesc();
+        return productRepository.findTop8ByActiveTrueOrderByReviewCountDesc();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Product> getBestSellers() {
+        return productRepository.findTop8ByActiveTrueOrderByReviewCountDesc();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Product> getFlashDeals() {
-        return productRepository.findTop8ByActiveTrueAndDiscountPercentageGreaterThanOrderByDiscountPercentageDesc(BigDecimal.valueOf(15));
+        return productRepository.findTop12ByActiveTrueAndDiscountPercentageGreaterThanEqualOrderByDiscountPercentageDesc(BigDecimal.valueOf(10));
     }
 
     @Override

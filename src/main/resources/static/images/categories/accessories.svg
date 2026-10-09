@@ -6,8 +6,10 @@
     </linearGradient>
   </defs>
   <rect width="100%" height="100%" rx="16" fill="url(#grad-accessories)"/>
-  <circle cx="200" cy="120" r="60" fill="rgba(255,255,255,0.15)"/>
-  <text x="50%" y="135" font-size="54" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">?</text>
-  <text x="50%" y="220" font-size="24" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Accessories</text>
-  <text x="50%" y="245" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Shop Collection &rarr;</text>
+  <circle cx="200" cy="115" r="54" fill="rgba(255,255,255,0.18)"/>
+  <g transform="translate(160, 75)">
+    <rect x="28" y="24" width="24" height="32" rx="6" fill="none" stroke="#FFFFFF" stroke-width="4"/><path d="M34 24 L34 14 L46 14 L46 24 M34 56 L34 66 L46 66 L46 56" stroke="#FFFFFF" stroke-width="4"/><circle cx="40" cy="40" r="4" fill="#FFFFFF"/>
+  </g>
+  <text x="50%" y="210" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Accessories</text>
+  <text x="50%" y="240" font-size="14" fill="rgba(255,255,255,0.85)" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Smart Wearables</text>
 </svg>

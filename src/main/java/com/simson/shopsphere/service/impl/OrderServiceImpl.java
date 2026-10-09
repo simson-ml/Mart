@@ -140,7 +140,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 4. Create Order Entity
         PaymentMethod paymentMethod = checkoutRequest.getPaymentMethod() != null ? checkoutRequest.getPaymentMethod() : PaymentMethod.COD;
-        PaymentStatus initialPaymentStatus = (paymentMethod == PaymentMethod.COD) ? PaymentStatus.PENDING : PaymentStatus.PAID;
+        PaymentStatus initialPaymentStatus = (paymentMethod == PaymentMethod.COD || paymentMethod == PaymentMethod.UPI)
+                ? PaymentStatus.PENDING
+                : PaymentStatus.PAID;
 
         Order order = Order.builder()
                 .orderNumber(generateOrderNumber())

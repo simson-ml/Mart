@@ -57,6 +57,9 @@
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
                             <input type="password" th:field="*{password}" class="form-control" placeholder="••••••••" required>
+                            <button type="button" class="btn btn-outline-secondary toggle-password-btn" title="Show or hide password" aria-label="Toggle password visibility">
+                                <i class="bi bi-eye"></i>
+                            </button>
                         </div>
                         <div class="text-danger small mt-1" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password error</div>
                     </div>
@@ -66,6 +69,9 @@
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="bi bi-lock-fill"></i></span>
                             <input type="password" th:field="*{confirmPassword}" class="form-control" placeholder="••••••••" required>
+                            <button type="button" class="btn btn-outline-secondary toggle-password-btn" title="Show or hide password" aria-label="Toggle password visibility">
+                                <i class="bi bi-eye"></i>
+                            </button>
                         </div>
                         <div class="text-danger small mt-1" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">Confirm password error</div>
                     </div>

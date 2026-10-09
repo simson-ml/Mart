@@ -41,7 +41,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findTop8ByActiveTrueOrderByRatingDesc();
 
     @EntityGraph(attributePaths = {"category"})
+    List<Product> findTop8ByActiveTrueOrderByReviewCountDesc();
+
+    @EntityGraph(attributePaths = {"category"})
     List<Product> findTop8ByActiveTrueAndDiscountPercentageGreaterThanOrderByDiscountPercentageDesc(BigDecimal minDiscount);
+
+    @EntityGraph(attributePaths = {"category"})
+    List<Product> findTop12ByActiveTrueAndDiscountPercentageGreaterThanEqualOrderByDiscountPercentageDesc(BigDecimal minDiscount);
 
     @EntityGraph(attributePaths = {"category"})
     List<Product> findTop4ByCategoryAndActiveTrueAndIdNotOrderByRatingDesc(Category category, Long id);

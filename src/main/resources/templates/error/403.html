@@ -18,7 +18,7 @@
                 <i class="bi bi-shield-x text-danger display-1 mb-3"></i>
                 <h1 class="fw-black text-danger display-4">403</h1>
                 <h3 class="fw-bold text-dark mb-3">Access Denied</h3>
-                <p class="text-muted mb-4" th:text="${errorMessage != null ? errorMessage : 'You do not have administrative permission to view this resource.'}">
+                <p class="text-muted mb-4" th:text="${errorMessage != null ? errorMessage : 'You do not have permission to access this page or perform this action.'}">
                     You do not have permission to view this resource.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
@@ -26,7 +26,7 @@
                         <i class="bi bi-house-door-fill me-1"></i> Return Home
                     </a>
                     <a th:href="@{/login}" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold">
-                        Sign In with Admin Account
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In / Switch Account
                     </a>
                 </div>
             </div>
