@@ -50,8 +50,10 @@
                                 <tr th:each="cat : ${categories}">
                                     <td class="font-monospace text-muted" th:text="${cat.id}">1</td>
                                     <td>
-                                        <img th:src="${cat.imageUrl != null ? cat.imageUrl : '/images/categories/electronics.svg'}"
-                                             th:alt="${cat.name}" class="rounded bg-light p-1" style="width: 45px; height: 45px; object-fit: contain;">
+                                        <img th:src="${cat.imageUrl != null ? cat.imageUrl : '/images/categories/default.svg'}"
+                                             th:alt="${cat.name}"
+                                             onerror="this.onerror=null; this.src='/images/categories/default.svg';"
+                                             class="rounded bg-light p-1" style="width: 45px; height: 45px; object-fit: contain;">
                                     </td>
                                     <td class="fw-bold text-dark" th:text="${cat.name}">Category Name</td>
                                     <td class="font-monospace text-muted small" th:text="${cat.slug}">category-slug</td>

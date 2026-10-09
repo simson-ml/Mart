@@ -74,7 +74,9 @@
                                     <td class="font-monospace text-muted" th:text="${prod.id}">1</td>
                                     <td>
                                         <img th:src="${prod.imageUrl != null ? prod.imageUrl : '/images/products/placeholder.svg'}"
-                                             th:alt="${prod.name}" class="rounded bg-light p-1" style="width: 50px; height: 50px; object-fit: contain;">
+                                             th:alt="${prod.name}"
+                                             onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                             class="rounded bg-light p-1" style="width: 50px; height: 50px; object-fit: contain;">
                                     </td>
                                     <td>
                                         <div class="fw-bold text-dark text-truncate" style="max-width: 250px;" th:text="${prod.name}">Product Name</div>

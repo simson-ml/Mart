@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmation — ShopSphere</title>
+    <title>Order Confirmation — ShopSphere Mart</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
@@ -14,86 +14,163 @@
     <div th:replace="~{fragments/alerts :: alerts}"></div>
 
     <main class="py-5">
-        <div class="container" style="max-width: 800px;">
+        <div class="container" style="max-width: 850px;">
 
-            <div class="card border-0 shadow-sm rounded-3 p-5 text-center mb-4">
+            <!-- Confirmation Hero Header -->
+            <div class="card border-0 shadow-sm rounded-3 p-4 p-md-5 text-center mb-4">
                 <div class="mb-3">
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3.8rem;"></i>
                 </div>
                 <h2 class="fw-bold text-dark">Thank You for Your Order!</h2>
                 <p class="text-muted lead fs-6 mb-4">
-                    Your order has been successfully placed. We will send you updates as your package progresses.
+                    Your order has been placed successfully. A confirmation summary is detailed below.
                 </p>
 
-                <div class="bg-light p-3 rounded-3 mb-4 d-inline-block mx-auto text-start">
+                <!-- Key Order Info Summary Box -->
+                <div class="bg-light p-3 p-md-4 rounded-3 mb-4 d-inline-block w-100 text-start">
                     <div class="row g-3">
-                        <div class="col-sm-6">
-                            <span class="text-muted small">Order Number:</span>
-                            <div class="fw-bold text-primary font-monospace" th:text="${order.orderNumber}">ORD-20261007-4123</div>
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-muted small d-block">Order ID:</span>
+                            <span class="fw-bold text-primary font-monospace" th:text="${order.orderNumber}">ORD-20261009-DEC61C</span>
                         </div>
-                        <div class="col-sm-6">
-                            <span class="text-muted small">Order Date:</span>
-                            <div class="fw-bold text-dark" th:text="${#temporals.format(order.createdAt, 'dd MMMM yyyy, hh:mm a')}">07 Oct 2026</div>
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-muted small d-block">Order Date:</span>
+                            <span class="fw-bold text-dark" th:text="${#temporals.format(order.createdAt, 'dd MMMM yyyy, hh:mm a')}">09 Oct 2026</span>
                         </div>
-                        <div class="col-sm-6">
-                            <span class="text-muted small">Payment Method:</span>
-                            <div class="fw-semibold text-dark" th:text="${order.paymentMethod.label}">Cash on Delivery</div>
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-muted small d-block">Payment Method:</span>
+                            <span class="fw-semibold text-dark" th:text="${order.paymentMethod.label}">UPI / QR Code</span>
                         </div>
-                        <div class="col-sm-6">
-                            <span class="text-muted small">Payment Status:</span>
-                            <span class="badge" th:classappend="${order.paymentStatus.name() == 'PAID'} ? 'bg-success' : 'bg-warning text-dark'"
-                                  th:text="${order.paymentStatus}">PAID</span>
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-muted small d-block">Payment Status:</span>
+                            <span class="badge"
+                                  th:classappend="${order.paymentStatus.name() == 'PAID'} ? 'bg-success' : (${order.paymentStatus.name() == 'PENDING'} ? 'bg-warning text-dark' : 'bg-danger')"
+                                  th:text="${order.paymentStatus}">PENDING</span>
                         </div>
                     </div>
                 </div>
 
+                <!-- UPI Action Notice if Payment is Pending -->
+                <div th:if="${order.paymentMethod.name() == 'UPI' and order.paymentStatus.name() == 'PENDING'}"
+                     class="alert alert-warning border-warning d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 text-start mb-4 p-3 rounded-3">
+                    <div>
+                        <strong class="d-block text-dark"><i class="bi bi-qr-code-scan text-primary me-2"></i>UPI Payment Pending</strong>
+                        <span class="small text-secondary" th:if="${payment != null and payment.transactionId != null and payment.transactionId.startsWith('UPI-UTR-')}">
+                            UTR Reference <code class="fw-bold text-dark" th:text="${payment.transactionId.replace('UPI-UTR-', '')}">482910492812</code> submitted. Verification is in progress.
+                        </span>
+                        <span class="small text-secondary" th:unless="${payment != null and payment.transactionId != null and payment.transactionId.startsWith('UPI-UTR-')}">
+                            Please complete payment of <strong class="text-dark" th:text="'₹' + ${#numbers.formatDecimal(order.netAmount, 0, 'COMMA', 0, 'POINT')}">₹48,999</strong> using UPI ID <code>simson2610@nyes</code> and submit your UTR number.
+                        </span>
+                    </div>
+                    <a th:href="@{/orders/{orderNumber}/payment(orderNumber=${order.orderNumber})}" class="btn btn-warning fw-bold text-nowrap rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-arrow-right-circle-fill me-1"></i>
+                        <span th:text="${payment != null and payment.transactionId != null and payment.transactionId.startsWith('UPI-UTR-')} ? 'Update UPI UTR' : 'Pay / Submit UTR'">Pay / Submit UTR</span>
+                    </a>
+                </div>
+
+                <!-- Action Navigation Buttons -->
                 <div class="d-flex flex-wrap justify-content-center gap-3">
-                    <a th:href="@{/orders/{orderNumber}(orderNumber=${order.orderNumber})}" class="btn btn-primary rounded-pill px-4 fw-bold">
+                    <a th:href="@{/orders/{orderNumber}(orderNumber=${order.orderNumber})}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
                         <i class="bi bi-geo-alt-fill me-1"></i> Track Order Status
                     </a>
                     <a th:href="@{/orders}" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold">
-                        View All Orders
+                        <i class="bi bi-bag-check me-1"></i> View All Orders
                     </a>
-                    <a th:href="@{/products}" class="btn btn-link text-decoration-none">
+                    <a th:href="@{/products}" class="btn btn-link text-decoration-none fw-semibold">
                         Continue Shopping &rarr;
                     </a>
                 </div>
             </div>
 
-            <!-- Order Items Summary Snapshot -->
-            <div class="card border-0 shadow-sm rounded-3 p-4">
-                <h5 class="fw-bold border-bottom pb-3 mb-3">Order Details</h5>
-                
-                <div class="d-flex flex-column gap-3 mb-3">
-                    <div class="d-flex justify-content-between align-items-center" th:each="item : ${order.items}">
-                        <div class="d-flex align-items-center gap-3">
-                            <img th:src="${item.productImageUrl != null ? item.productImageUrl : '/images/products/placeholder.svg'}"
-                                 th:alt="${item.productName}" class="rounded bg-light p-1" style="width: 55px; height: 55px; object-fit: contain;">
-                            <div>
-                                <h6 class="mb-0 fw-bold" th:text="${item.productName}">Product Name</h6>
-                                <small class="text-muted" th:text="'Quantity: ' + ${item.quantity} + ' × ₹' + ${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT')}">Qty: 1 × ₹49,999</small>
+            <div class="row g-4">
+                <!-- Left: Purchased Products Breakdown -->
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
+                        <h5 class="fw-bold border-bottom pb-3 mb-3">
+                            <i class="bi bi-cart-check-fill text-primary me-2"></i>Purchased Products (<span th:text="${#lists.size(order.items)}">1</span>)
+                        </h5>
+                        
+                        <div class="d-flex flex-column gap-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center p-2 rounded-3 bg-light" th:each="item : ${order.items}">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img th:src="${item.productImageUrl != null ? item.productImageUrl : '/images/products/placeholder.svg'}"
+                                         th:alt="${item.productName}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         class="rounded bg-white p-1 border" style="width: 60px; height: 60px; object-fit: contain;">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-dark" th:text="${item.productName}">Product Name</h6>
+                                        <small class="text-muted font-monospace" th:if="${item.productSku != null}" th:text="'SKU: ' + ${item.productSku}">SKU</small>
+                                        <div class="small text-muted" th:text="'Qty: ' + ${item.quantity} + ' × ₹' + ${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT')}">Qty: 1 × ₹49,999</div>
+                                    </div>
+                                </div>
+                                <span class="fw-bold text-dark pe-2" th:text="'₹' + ${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
                             </div>
                         </div>
-                        <span class="fw-bold text-dark" th:text="'₹' + ${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
+
+                        <!-- Price Breakdown -->
+                        <div class="border-top pt-3 mt-auto">
+                            <div class="d-flex justify-content-between mb-1 small text-muted">
+                                <span>Subtotal:</span>
+                                <span th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1 small text-success" th:if="${order.discountAmount > 0}">
+                                <span>Discount (<span th:text="${order.couponCode != null ? order.couponCode : 'Offer'}">Coupon</span>):</span>
+                                <span th:text="'-₹' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT')}">-₹1,000</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small text-muted">
+                                <span>Delivery Charges:</span>
+                                <span class="text-success fw-semibold" th:if="${order.deliveryCharge == 0}">FREE</span>
+                                <span class="text-dark fw-semibold" th:if="${order.deliveryCharge > 0}" th:text="'₹' + ${order.deliveryCharge}">₹99</span>
+                            </div>
+                            <div class="d-flex justify-content-between fs-5 fw-bold text-dark border-top pt-2">
+                                <span>Final Amount:</span>
+                                <span class="text-primary" th:text="'₹' + ${#numbers.formatDecimal(order.netAmount, 0, 'COMMA', 0, 'POINT')}">₹48,999</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="border-top pt-3">
-                    <div class="d-flex justify-content-between mb-1 small text-muted">
-                        <span>Items Total:</span>
-                        <span th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
+                <!-- Right: Delivery Address & Payment Info -->
+                <div class="col-lg-5">
+                    <!-- Delivery Address Card -->
+                    <div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
+                        <h6 class="fw-bold border-bottom pb-2 mb-3">
+                            <i class="bi bi-geo-alt-fill text-danger me-2"></i>Delivery Address
+                        </h6>
+                        <div class="text-secondary small" style="line-height: 1.7;">
+                            <p class="mb-0" th:text="${order.shippingAddressSnapshot}">
+                                Rahul Sharma, Flat 402, Green Acres Residency, Bengaluru, Karnataka - 560001
+                            </p>
+                        </div>
+                        <div class="mt-3 pt-2 border-top small" th:if="${order.notes != null and !order.notes.isBlank()}">
+                            <strong class="text-muted">Delivery Notes:</strong>
+                            <p class="text-secondary mb-0" th:text="${order.notes}">Instructions</p>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between mb-1 small text-success" th:if="${order.discountAmount > 0}">
-                        <span>Discount Applied:</span>
-                        <span th:text="'-₹' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT')}">-₹1,000</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2 small text-muted">
-                        <span>Delivery Fee:</span>
-                        <span th:text="${order.deliveryCharge == 0 ? 'FREE' : '₹' + order.deliveryCharge}">FREE</span>
-                    </div>
-                    <div class="d-flex justify-content-between fs-5 fw-bold text-dark border-top pt-2">
-                        <span>Net Paid / Due:</span>
-                        <span class="text-primary" th:text="'₹' + ${#numbers.formatDecimal(order.netAmount, 0, 'COMMA', 0, 'POINT')}">₹48,999</span>
+
+                    <!-- Payment Information Snapshot Card -->
+                    <div class="card border-0 shadow-sm rounded-3 p-4">
+                        <h6 class="fw-bold border-bottom pb-2 mb-3">
+                            <i class="bi bi-credit-card-2-front-fill text-success me-2"></i>Payment Details
+                        </h6>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">Payment Mode:</span>
+                            <strong class="text-dark" th:text="${order.paymentMethod.label}">UPI / QR Code</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">Payment Status:</span>
+                            <span class="badge"
+                                  th:classappend="${order.paymentStatus.name() == 'PAID'} ? 'bg-success' : (${order.paymentStatus.name() == 'PENDING'} ? 'bg-warning text-dark' : 'bg-danger')"
+                                  th:text="${order.paymentStatus}">PENDING</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small" th:if="${payment != null and payment.transactionId != null}">
+                            <span class="text-muted">Transaction ID:</span>
+                            <span class="font-monospace small text-dark" th:text="${payment.transactionId}">TXN-UPI-123456</span>
+                        </div>
+                        <div class="d-flex justify-content-between small border-top pt-2">
+                            <span class="text-muted">Total Paid / Payable:</span>
+                            <strong class="text-primary fs-6" th:text="'₹' + ${#numbers.formatDecimal(order.netAmount, 0, 'COMMA', 0, 'POINT')}">₹48,999</strong>
+                        </div>
                     </div>
                 </div>
             </div>

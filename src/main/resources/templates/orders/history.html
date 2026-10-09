@@ -64,7 +64,9 @@
                                  th:each="item : ${order.items}">
                                 <div class="d-flex align-items-center gap-3">
                                     <img th:src="${item.productImageUrl != null ? item.productImageUrl : '/images/products/placeholder.svg'}"
-                                         th:alt="${item.productName}" class="rounded bg-light p-1" style="width: 70px; height: 70px; object-fit: contain;">
+                                         th:alt="${item.productName}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         class="rounded bg-light p-1" style="width: 70px; height: 70px; object-fit: contain;">
                                     <div>
                                         <h6 class="fw-bold text-dark mb-1" th:text="${item.productName}">Product Name</h6>
                                         <small class="text-muted" th:text="'Qty: ' + ${item.quantity} + ' • ₹' + ${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT')} + ' each'">Qty: 1 • ₹23,992</small>

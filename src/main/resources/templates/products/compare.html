@@ -55,7 +55,10 @@
                                                 th:data-product-id="${product.id}" title="Remove from compare">
                                             <i class="bi bi-x"></i>
                                         </button>
-                                        <img th:src="${product.imageUrl}" th:alt="${product.name}" class="img-fluid rounded mb-2" style="max-height: 140px; object-fit: contain;">
+                                        <img th:src="${product.imageUrl != null ? product.imageUrl : '/images/products/placeholder.svg'}"
+                                             th:alt="${product.name}"
+                                             onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                             class="img-fluid rounded mb-2" style="max-height: 140px; object-fit: contain;">
                                         <h6 class="fw-bold text-dark text-truncate" th:text="${product.name}">Product Name</h6>
                                     </div>
                                 </th>

@@ -18,9 +18,9 @@
 
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold mb-0"><i class="bi bi-geo-alt-fill text-success me-2"></i>My Addresses</h3>
-                <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                <a th:href="@{/account/addresses/add}" class="btn btn-primary rounded-pill px-4 fw-semibold">
                     <i class="bi bi-plus-lg me-1"></i> Add New Address
-                </button>
+                </a>
             </div>
 
             <!-- Empty State -->
@@ -29,9 +29,9 @@
                     <i class="bi bi-geo text-muted display-1 mb-3"></i>
                     <h4 class="fw-bold">No Addresses Saved</h4>
                     <p class="text-muted mb-4">Add your shipping addresses to speed up checkout.</p>
-                    <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                        Add an Address
-                    </button>
+                    <a th:href="@{/account/addresses/add}" class="btn btn-primary btn-lg rounded-pill px-5 fw-semibold shadow-sm">
+                        <i class="bi bi-plus-lg me-1"></i> Add an Address
+                    </a>
                 </div>
             </div>
 
@@ -51,6 +51,11 @@
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                    <li>
+                                        <a th:href="@{/account/addresses/edit/{id}(id=${addr.id})}" class="dropdown-item py-2 text-primary">
+                                            <i class="bi bi-pencil me-2"></i> Edit Address
+                                        </a>
+                                    </li>
                                     <li th:if="${!addr.default}">
                                         <form th:action="@{/account/addresses/default/{id}(id=${addr.id})}" method="POST">
                                             <button type="submit" class="dropdown-item py-2 text-success">

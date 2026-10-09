@@ -51,7 +51,9 @@
                                  th:each="item : ${cart.items}">
                                 <div class="d-flex align-items-center gap-3">
                                     <img th:src="${item.productImageUrl != null ? item.productImageUrl : '/images/products/placeholder.svg'}"
-                                         th:alt="${item.productName}" class="rounded bg-white p-1" style="width: 75px; height: 75px; object-fit: contain;">
+                                         th:alt="${item.productName}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         class="rounded bg-white p-1" style="width: 75px; height: 75px; object-fit: contain;">
                                     <div>
                                         <small class="text-uppercase text-muted fw-bold" th:text="${item.productBrand}">Brand</small>
                                         <a th:href="@{/products/{slug}(slug=${item.productSlug})}" class="text-dark fw-bold text-decoration-none d-block text-truncate" style="max-width: 320px;" th:text="${item.productName}">Product Name</a>

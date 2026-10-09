@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'UPI Payment for Order ' + ${order.orderNumber} + ' — ShopSphere Mart'">UPI Payment — ShopSphere Mart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .qr-container {
+            width: 240px;
+            height: 240px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: 2px dashed #0d6efd;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .qr-container img, .qr-container canvas, .qr-container svg {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+        .upi-app-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #495057;
+        }
+        .step-bubble {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+    <main class="py-5">
+        <div class="container" style="max-width: 900px;">
+
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/orders}" class="text-decoration-none">Orders</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/orders/confirmation/{orderNumber}(orderNumber=${order.orderNumber})}" class="text-decoration-none font-monospace" th:text="${order.orderNumber}">ORD-12345</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">UPI Payment</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <!-- Header Banner -->
+                <div class="bg-primary text-white p-4 p-md-4 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-white text-primary rounded-circle mb-2" style="width: 50px; height: 50px;">
+                        <i class="bi bi-qr-code-scan fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">UPI Payment</h3>
+                    <p class="mb-0 text-white-50">Scan QR Code or pay using any UPI app to complete your order</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    
+                    <!-- Order & Amount Quick Info -->
+                    <div class="bg-light p-3 rounded-3 mb-4">
+                        <div class="row g-3 text-center text-md-start align-items-center">
+                            <div class="col-md-4 border-end-md">
+                                <span class="text-muted small d-block">Order Number</span>
+                                <strong class="text-dark font-monospace fs-6" th:text="${order.orderNumber}">ORD-20261009-DEC61C</strong>
+                            </div>
+                            <div class="col-md-4 border-end-md">
+                                <span class="text-muted small d-block">Merchant Payee</span>
+                                <strong class="text-dark" th:text="${merchantName}">ShopSphere Mart</strong>
+                            </div>
+                            <div class="col-md-4 text-center text-md-end">
+                                <span class="text-muted small d-block">Payable Amount</span>
+                                <span class="fs-4 fw-bold text-success" th:text="'₹' + ${#numbers.formatDecimal(order.netAmount, 0, 'COMMA', 0, 'POINT')}">₹48,999</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- Left Column: QR Code & Mobile Deep Link -->
+                        <div class="col-lg-6 text-center border-end-lg">
+                            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-phone-fill text-primary me-2"></i>Option A: Scan or Pay via App</h5>
+
+                            <!-- QR Code Container -->
+                            <div class="qr-container mb-3" id="qrcodeWrapper">
+                                <img id="upiQrImg"
+                                     th:src="'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + ${#uris.escapePath(upiUri)}"
+                                     alt="ShopSphere UPI Payment QR Code"
+                                     class="img-fluid">
+                            </div>
+
+                            <p class="small text-muted mb-3">Scan using Google Pay, PhonePe, Paytm, BHIM, or any bank UPI app</p>
+
+                            <!-- Copy UPI ID Box -->
+                            <div class="card bg-light border p-2 rounded-3 mb-3 d-inline-flex flex-row align-items-center justify-content-between w-100" style="max-width: 320px;">
+                                <div class="text-start ps-2">
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Merchant VPA / UPI ID</small>
+                                    <strong class="font-monospace text-primary" id="merchantUpiText" th:text="${merchantUpiId}">simson2610@nyes</strong>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" id="copyUpiBtn" title="Copy UPI ID">
+                                    <i class="bi bi-clipboard me-1"></i> <span id="copyBtnText">Copy</span>
+                                </button>
+                            </div>
+
+                            <!-- Mobile Pay with UPI Button -->
+                            <div class="d-grid mb-3">
+                                <a th:href="${upiUri}" class="btn btn-success btn-lg fw-bold rounded-pill shadow-sm">
+                                    <i class="bi bi-arrow-up-right-circle-fill me-2"></i> Pay with UPI App
+                                </a>
+                            </div>
+
+                            <!-- Supported Apps Badges -->
+                            <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
+                                <span class="upi-app-badge"><i class="bi bi-google text-danger"></i> Google Pay</span>
+                                <span class="upi-app-badge"><i class="bi bi-p-circle-fill text-primary"></i> PhonePe</span>
+                                <span class="upi-app-badge"><i class="bi bi-wallet2 text-info"></i> Paytm</span>
+                                <span class="upi-app-badge"><i class="bi bi-shield-check text-success"></i> BHIM</span>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Instructions & UTR Submission Form -->
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-receipt-cutoff text-primary me-2"></i>Option B: Submit Reference (UTR)</h5>
+
+                            <!-- Step-by-Step Instructions -->
+                            <div class="d-flex flex-column gap-3 mb-4">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="step-bubble">1</div>
+                                    <div>
+                                        <strong class="text-dark small d-block">Scan QR or Open UPI App</strong>
+                                        <span class="text-muted small">Use your mobile UPI app to scan the QR code or send payment to <code>simson2610@nyes</code>.</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="step-bubble">2</div>
+                                    <div>
+                                        <strong class="text-dark small d-block">Pay Exactly <span th:text="'₹' + ${#numbers.formatDecimal(order.netAmount, 0, 'COMMA', 0, 'POINT')}">₹48,999</span></strong>
+                                        <span class="text-muted small">Ensure the merchant name displays <strong>ShopSphere Mart</strong>.</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="step-bubble">3</div>
+                                    <div>
+                                        <strong class="text-dark small d-block">Enter 12-digit UPI Ref / UTR Number</strong>
+                                        <span class="text-muted small">Locate the 12-digit transaction ID / UTR in your payment details and submit below.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- UTR Submission Form -->
+                            <div class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 rounded-3 p-3">
+                                <h6 class="fw-bold text-dark mb-2">Confirm Payment Submission</h6>
+                                <p class="small text-muted mb-3">Once you have completed the UPI transfer, enter the transaction reference number below so we can verify your order immediately.</p>
+
+                                <form th:action="@{/orders/{orderNumber}/payment/submit-utr(orderNumber=${order.orderNumber})}" method="POST">
+                                    <div class="mb-3">
+                                        <label for="utrNumber" class="form-label small fw-bold text-dark">UPI Reference / UTR Number *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bi bi-hash"></i></span>
+                                            <input type="text"
+                                                   class="form-control font-monospace"
+                                                   id="utrNumber"
+                                                   name="utrNumber"
+                                                   placeholder="e.g. 428198273612"
+                                                   required
+                                                   minlength="6"
+                                                   maxlength="30"
+                                                   pattern="[a-zA-Z0-9_-]+"
+                                                   th:value="${payment != null and payment.transactionId != null and payment.transactionId.startsWith('UPI-UTR-') ? payment.transactionId.replace('UPI-UTR-', '') : ''}">
+                                        </div>
+                                        <div class="form-text small">Standard 12-digit number found on your UPI payment receipt.</div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary fw-bold rounded-pill">
+                                            <i class="bi bi-check2-circle me-1"></i> Submit Payment Reference
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Alternate Navigation -->
+                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <a th:href="@{/orders/confirmation/{orderNumber}(orderNumber=${order.orderNumber})}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                                    <i class="bi bi-arrow-left me-1"></i> Order Confirmation
+                                </a>
+                                <a th:href="@{/orders}" class="btn btn-link btn-sm text-decoration-none">
+                                    My Orders &rarr;
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/main.js}"></script>
+
+    <!-- Client-side QRCode JS Generator with fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const upiUri = /*[[${upiUri}]]*/ '';
+        const merchantUpiId = /*[[${merchantUpiId}]]*/ 'simson2610@nyes';
+
+        // Initialize Client-side QR if library is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof QRCode !== 'undefined' && upiUri) {
+                const container = document.getElementById('qrcodeWrapper');
+                if (container) {
+                    container.innerHTML = '';
+                    new QRCode(container, {
+                        text: upiUri,
+                        width: 220,
+                        height: 220,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.M
+                    });
+                }
+            }
+
+            // Copy UPI ID to clipboard
+            const copyBtn = document.getElementById('copyUpiBtn');
+            const copyBtnText = document.getElementById('copyBtnText');
+            if (copyBtn && copyBtnText) {
+                copyBtn.addEventListener('click', function() {
+                    navigator.clipboard.writeText(merchantUpiId).then(function() {
+                        copyBtnText.textContent = 'Copied!';
+                        copyBtn.classList.remove('btn-outline-primary');
+                        copyBtn.classList.add('btn-success');
+                        setTimeout(function() {
+                            copyBtnText.textContent = 'Copy';
+                            copyBtn.classList.remove('btn-success');
+                            copyBtn.classList.add('btn-outline-primary');
+                        }, 2500);
+                    }).catch(function(err) {
+                        console.error('Failed to copy UPI ID: ', err);
+                    });
+                });
+            }
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

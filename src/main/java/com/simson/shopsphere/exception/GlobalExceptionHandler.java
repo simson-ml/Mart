@@ -32,6 +32,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public Object handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request, Model model) {
         log.warn("Resource not found: {} on URI {}", ex.getMessage(), request.getRequestURI());
         if (isApiRequest(request)) {
@@ -39,6 +40,18 @@ public class GlobalExceptionHandler {
         }
         model.addAttribute("errorCode", 404);
         model.addAttribute("errorMessage", ex.getMessage());
+        return "error/404";
+    }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Object handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex, HttpServletRequest request, Model model) {
+        log.debug("Static resource not found: {} on URI {}", ex.getMessage(), request.getRequestURI());
+        if (isApiRequest(request)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Resource not found"));
+        }
+        model.addAttribute("errorCode", 404);
+        model.addAttribute("errorMessage", "The requested static resource was not found.");
         return "error/404";
     }
 
@@ -76,6 +89,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UnauthorizedAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public Object handleUnauthorizedAccess(UnauthorizedAccessException ex, HttpServletRequest request, Model model) {
         log.warn("Unauthorized access attempt: {} on URI {}", ex.getMessage(), request.getRequestURI());
         if (isApiRequest(request)) {
@@ -118,6 +132,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Object handleGeneralException(Exception ex, HttpServletRequest request, Model model) {
         log.error("Unhandled application error on URI: " + request.getRequestURI(), ex);
         if (isApiRequest(request)) {

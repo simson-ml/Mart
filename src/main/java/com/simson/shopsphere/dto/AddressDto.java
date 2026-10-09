@@ -12,7 +12,7 @@ public class AddressDto {
     private String fullName;
 
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^[0-9]{10}$", message = "Phone must be a valid 10-digit number")
+    @Pattern(regexp = "^(\\+91[\\-\\s]?)?[0-9]{10}$", message = "Phone must be a valid 10-digit mobile number")
     private String phone;
 
     @NotBlank(message = "Address line 1 is required")

@@ -28,116 +28,131 @@
             </nav>
 
             <!-- Product Overview Card -->
-            <div class="card border-0 shadow-sm rounded-3 p-4 mb-5">
-                <div class="row g-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-5">
+                <div class="row g-4 align-items-start">
                     <!-- Left: Large Image -->
                     <div class="col-lg-5 text-center">
-                        <div class="p-4 bg-light rounded-3 d-flex align-items-center justify-content-center" style="min-height: 380px;">
+                        <div class="p-4 bg-light rounded-4 d-flex align-items-center justify-content-center border" style="min-height: 400px; background-color: #fafbfc;">
                             <img th:src="${product.imageUrl != null ? product.imageUrl : '/images/products/placeholder.svg'}"
-                                 th:alt="${product.name}" class="img-fluid" style="max-height: 340px; object-fit: contain;">
+                                 th:alt="${product.name}"
+                                 onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                 class="img-fluid rounded-3" style="max-height: 360px; max-width: 100%; object-fit: contain;">
                         </div>
                     </div>
 
                     <!-- Right: Product Information & Buy Actions -->
                     <div class="col-lg-7">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <span class="badge bg-primary-subtle text-primary fw-bold text-uppercase mb-2" th:text="${product.brand}">Brand</span>
-                                <span class="badge bg-secondary-subtle text-secondary mb-2 ms-1" th:text="'SKU: ' + ${product.sku}">SKU</span>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary-subtle text-primary fw-bold text-uppercase px-2 py-1" th:text="${product.brand}">Brand</span>
+                                <span class="badge bg-secondary-subtle text-secondary px-2 py-1" th:text="'SKU: ' + ${product.sku}">SKU</span>
+                            </div>
                             <div class="d-flex gap-2">
                                 <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill ajax-compare-btn"
-                                        th:data-product-id="${product.id}">
+                                        th:data-product-id="${product.id}" title="Compare with other products">
                                     <i class="bi bi-arrow-left-right me-1"></i> Compare
                                 </button>
-                                <!-- Wishlist Toggle Form -->
-                                <form th:action="@{/wishlist/add/{id}(id=${product.id})}" method="POST" th:if="${!inWishlist}">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">
-                                        <i class="bi bi-heart me-1"></i> Wishlist
-                                    </button>
-                                </form>
-                                <form th:action="@{/wishlist/remove/{id}(id=${product.id})}" method="POST" th:if="${inWishlist}">
-                                    <button type="submit" class="btn btn-danger btn-sm rounded-pill">
-                                        <i class="bi bi-heart-fill me-1"></i> In Wishlist
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-sm rounded-pill ajax-wishlist-btn"
+                                        th:classappend="${inWishlist ? 'btn-danger' : 'btn-outline-danger'}"
+                                        th:data-product-id="${product.id}" title="Add to Wishlist">
+                                    <i class="bi" th:classappend="${inWishlist ? 'bi-heart-fill text-white' : 'bi-heart'}"></i>
+                                    <span class="ms-1" th:text="${inWishlist ? 'In Wishlist' : 'Wishlist'}">Wishlist</span>
+                                </button>
                             </div>
                         </div>
 
                         <h2 class="fw-bold text-dark mb-2" th:text="${product.name}">Product Title</h2>
 
                         <!-- Ratings & Reviews Count -->
-                        <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
                             <span class="rating-badge fs-6 px-2 py-1"><i class="bi bi-star-fill"></i> <span th:text="${product.rating}">4.5</span></span>
-                            <span class="text-muted fw-semibold" th:text="${product.reviewCount} + ' Verified Ratings & Reviews'">120 Ratings</span>
+                            <a href="#reviews-section" class="text-muted fw-semibold text-decoration-none small" th:text="${product.reviewCount} + ' Verified Ratings & Reviews'">120 Ratings</a>
                             <span class="text-muted">|</span>
-                            <span class="text-success fw-semibold"><i class="bi bi-patch-check-fill me-1"></i>ShopSphere Verified</span>
+                            <span class="text-success fw-semibold small"><i class="bi bi-patch-check-fill me-1"></i>ShopSphere Verified</span>
                         </div>
 
-                        <hr>
+                        <hr class="my-3 text-secondary opacity-25">
 
                         <!-- Price Section -->
                         <div class="mb-3">
-                            <div class="d-flex align-items-baseline gap-2">
-                                <span class="display-6 fw-bold text-dark"
+                            <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                                <span class="display-6 fw-bold text-primary"
                                       th:text="'₹' + ${#numbers.formatDecimal(product.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}">₹49,999</span>
                                 <span class="fs-5 text-muted text-decoration-line-through" th:if="${product.discountPercentage > 0}"
                                       th:text="'₹' + ${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')}">₹59,999</span>
-                                <span class="badge bg-danger fs-6" th:if="${product.discountPercentage > 0}"
+                                <span class="badge bg-danger fs-6 rounded-pill px-3 py-1" th:if="${product.discountPercentage > 0}"
                                       th:text="${#numbers.formatDecimal(product.discountPercentage, 0, 0)} + '% OFF'">17% OFF</span>
                             </div>
                             <div class="text-success small fw-bold mt-1" th:if="${product.discountPercentage > 0}">
-                                You save ₹<span th:text="${#numbers.formatDecimal(product.getSavingsAmount(), 0, 'COMMA', 0, 'POINT')}">10,000</span> (Inclusive of all taxes)
+                                <i class="bi bi-tag-fill me-1"></i>You save ₹<span th:text="${#numbers.formatDecimal(product.getSavingsAmount(), 0, 'COMMA', 0, 'POINT')}">10,000</span> (Inclusive of all taxes)
                             </div>
                         </div>
 
                         <!-- Stock Status -->
                         <div class="mb-4">
                             <div th:if="${!product.isOutOfStock()}">
-                                <span class="badge bg-success-subtle text-success fs-6 fw-semibold px-3 py-2">
-                                    <i class="bi bi-check-circle-fill me-1"></i> In Stock
+                                <span class="badge bg-success-subtle text-success fs-6 fw-semibold px-3 py-2 rounded-pill">
+                                    <i class="bi bi-check-circle-fill me-1"></i> In Stock (<span th:text="${product.stockQuantity}">10</span> units available)
                                 </span>
-                                <span class="text-danger fw-bold ms-2" th:if="${product.isLowStock()}"
-                                      th:text="'Hurry, only ' + ${product.stockQuantity} + ' left in stock!'"></span>
+                                <span class="text-danger fw-bold ms-2 small" th:if="${product.isLowStock()}"
+                                      th:text="'Hurry, only ' + ${product.stockQuantity} + ' left!'"></span>
                             </div>
                             <div th:if="${product.isOutOfStock()}">
-                                <span class="badge bg-danger-subtle text-danger fs-6 fw-semibold px-3 py-2">
+                                <span class="badge bg-danger-subtle text-danger fs-6 fw-semibold px-3 py-2 rounded-pill">
                                     <i class="bi bi-x-circle-fill me-1"></i> Currently Out of Stock
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Quantity & Add to Cart Form -->
-                        <form th:action="@{/cart/add}" method="POST" class="mb-4" th:if="${!product.isOutOfStock()}">
-                            <input type="hidden" name="productId" th:value="${product.id}">
-                            <div class="row g-3 align-items-center mb-3">
-                                <div class="col-auto">
-                                    <label for="quantity" class="col-form-label fw-bold">Quantity:</label>
+                        <!-- Quantity & Action Form -->
+                        <form th:action="@{/cart/add}" method="POST" id="productDetailForm" class="mb-4" th:if="${!product.isOutOfStock()}">
+                            <input type="hidden" name="productId" id="detailProductId" th:value="${product.id}">
+                            
+                            <!-- Quantity Selector -->
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <label for="detailQuantity" class="fw-bold text-secondary small text-uppercase mb-0">Quantity:</label>
+                                <div class="input-group" style="width: 130px;">
+                                    <button class="btn btn-outline-secondary" type="button" id="qty-minus-btn" aria-label="Decrease quantity">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" id="detailQuantity" name="quantity" class="form-control text-center fw-bold"
+                                           value="1" min="1" th:max="${product.stockQuantity > 10 ? 10 : product.stockQuantity}" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" id="qty-plus-btn" aria-label="Increase quantity">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
                                 </div>
-                                <div class="col-auto">
-                                    <select name="quantity" id="quantity" class="form-select form-select-sm" style="width: 80px;">
-                                        <option th:each="q : ${#numbers.sequence(1, product.stockQuantity > 5 ? 5 : product.stockQuantity)}"
-                                                th:value="${q}" th:text="${q}">1</option>
-                                    </select>
-                                </div>
+                                <span class="text-muted small" th:if="${product.stockQuantity <= 10}"
+                                      th:text="'(Max ' + ${product.stockQuantity} + ' units per order)'"></span>
                             </div>
 
+                            <!-- Buttons: Add to Cart & Buy Now -->
                             <div class="d-flex flex-wrap gap-3">
-                                <button type="submit" class="btn btn-primary btn-lg px-4 fw-bold rounded-pill shadow-sm">
-                                    <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
+                                <button type="button" id="detailAddToCartBtn" class="btn btn-primary btn-lg px-4 py-2 fw-bold rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2">
+                                    <i class="bi bi-cart-plus-fill fs-5"></i>
+                                    <span>Add to Cart</span>
                                 </button>
-                                <button type="submit" name="buyNow" value="true" class="btn btn-warning btn-lg px-4 fw-bold rounded-pill shadow-sm text-dark">
-                                    <i class="bi bi-lightning-fill me-1"></i> Buy Now
+                                <button type="submit" name="buyNow" value="true" id="detailBuyNowBtn" class="btn btn-warning btn-lg px-4 py-2 fw-bold rounded-pill shadow-sm text-dark d-flex align-items-center justify-content-center gap-2">
+                                    <i class="bi bi-lightning-fill fs-5"></i>
+                                    <span>Buy Now</span>
                                 </button>
                             </div>
                         </form>
 
+                        <!-- Out of stock display -->
+                        <div th:if="${product.isOutOfStock()}" class="mb-4">
+                            <button class="btn btn-secondary btn-lg px-4 py-2 fw-bold rounded-pill shadow-sm disabled" disabled>
+                                <i class="bi bi-x-circle-fill me-2"></i> Out of Stock
+                            </button>
+                            <p class="text-muted small mt-2">This item is currently unavailable. Add it to your wishlist to get notified when restocked.</p>
+                        </div>
+
                         <!-- Key Features Checklist -->
-                        <div class="bg-light p-3 rounded-3 mt-3">
+                        <div class="bg-light p-3 rounded-4 mt-3 border">
                             <div class="row g-2 small text-muted">
-                                <div class="col-6"><i class="bi bi-truck text-primary me-1"></i> Free Shipping > ₹999</div>
-                                <div class="col-6"><i class="bi bi-shield-check text-success me-1"></i> 1 Year Warranty</div>
-                                <div class="col-6"><i class="bi bi-cash-stack text-warning me-1"></i> Cash on Delivery available</div>
-                                <div class="col-6"><i class="bi bi-arrow-counterclockwise text-info me-1"></i> 7 Days Replacement</div>
+                                <div class="col-sm-6"><i class="bi bi-truck text-primary me-2 fs-6"></i> <strong>Free Delivery</strong> on orders over ₹999</div>
+                                <div class="col-sm-6"><i class="bi bi-shield-check text-success me-2 fs-6"></i> <strong>1 Year</strong> Brand Warranty</div>
+                                <div class="col-sm-6"><i class="bi bi-cash-stack text-warning me-2 fs-6"></i> <strong>Cash on Delivery</strong> eligible</div>
+                                <div class="col-sm-6"><i class="bi bi-arrow-counterclockwise text-info me-2 fs-6"></i> <strong>7 Days</strong> Easy Replacement</div>
                             </div>
                         </div>
 
@@ -259,7 +274,9 @@
                                       th:text="${#numbers.formatDecimal(rel.discountPercentage, 0, 0)} + '% OFF'">15% OFF</span>
                                 <a th:href="@{/products/{slug}(slug=${rel.slug})}">
                                     <img th:src="${rel.imageUrl != null ? rel.imageUrl : '/images/products/placeholder.svg'}"
-                                         th:alt="${rel.name}" loading="lazy">
+                                         th:alt="${rel.name}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         loading="lazy">
                                 </a>
                             </div>
                             <div class="product-body">
@@ -291,7 +308,9 @@
                                 </span>
                                 <a th:href="@{/products/{slug}(slug=${rec.slug})}">
                                     <img th:src="${rec.imageUrl != null ? rec.imageUrl : '/images/products/placeholder.svg'}"
-                                         th:alt="${rec.name}" loading="lazy">
+                                         th:alt="${rec.name}"
+                                         onerror="this.onerror=null; this.src='/images/products/placeholder.svg';"
+                                         loading="lazy">
                                 </a>
                             </div>
                             <div class="product-body">
