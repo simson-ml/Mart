@@ -2,10 +2,13 @@ package com.simson.shopsphere.controller.admin;
 
 import com.simson.shopsphere.dto.CategoryDto;
 import com.simson.shopsphere.entity.Category;
+import com.simson.shopsphere.entity.Role;
 import com.simson.shopsphere.entity.User;
+import com.simson.shopsphere.exception.UnauthorizedAccessException;
 import com.simson.shopsphere.service.CategoryService;
 import com.simson.shopsphere.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,16 +19,24 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/admin/categories")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminCategoryController {
+
+    private final CategoryService categoryService;
+    private final UserService userService;
 
     public AdminCategoryController(CategoryService categoryService, UserService userService) {
         this.categoryService = categoryService;
         this.userService = userService;
     }
 
-
-    private final CategoryService categoryService;
-    private final UserService userService;
+    private String getAuthenticatedAdminEmail() {
+        User currentAdmin = userService.getCurrentAuthenticatedUser();
+        if (currentAdmin == null || currentAdmin.getRole() != Role.ADMIN) {
+            throw new UnauthorizedAccessException("Administrative authentication required.");
+        }
+        return currentAdmin.getEmail();
+    }
 
     @GetMapping
     public String listCategories(Model model) {
@@ -44,8 +55,7 @@ public class AdminCategoryController {
             RedirectAttributes redirectAttributes,
             Model model
     ) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("categories", categoryService.getAllCategoriesAdmin());
@@ -70,8 +80,7 @@ public class AdminCategoryController {
             RedirectAttributes redirectAttributes,
             Model model
     ) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("categories", categoryService.getAllCategoriesAdmin());
@@ -90,8 +99,7 @@ public class AdminCategoryController {
 
     @PostMapping("/toggle/{id}")
     public String toggleCategoryStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         categoryService.toggleCategoryStatus(id, adminEmail);
         redirectAttributes.addFlashAttribute("infoMessage", "Category status updated.");

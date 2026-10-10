@@ -4,11 +4,14 @@ import com.simson.shopsphere.dto.OrderTimelineStepDto;
 import com.simson.shopsphere.entity.Order;
 import com.simson.shopsphere.entity.OrderStatus;
 import com.simson.shopsphere.entity.PaymentStatus;
+import com.simson.shopsphere.entity.Role;
 import com.simson.shopsphere.entity.User;
+import com.simson.shopsphere.exception.UnauthorizedAccessException;
 import com.simson.shopsphere.service.OrderService;
 import com.simson.shopsphere.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,16 +21,24 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/admin/orders")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminOrderController {
+
+    private final OrderService orderService;
+    private final UserService userService;
 
     public AdminOrderController(OrderService orderService, UserService userService) {
         this.orderService = orderService;
         this.userService = userService;
     }
 
-
-    private final OrderService orderService;
-    private final UserService userService;
+    private String getAuthenticatedAdminEmail() {
+        User currentAdmin = userService.getCurrentAuthenticatedUser();
+        if (currentAdmin == null || currentAdmin.getRole() != Role.ADMIN) {
+            throw new UnauthorizedAccessException("Administrative authentication required.");
+        }
+        return currentAdmin.getEmail();
+    }
 
     @GetMapping
     public String listOrders(
@@ -67,8 +78,7 @@ public class AdminOrderController {
             @RequestParam("status") OrderStatus status,
             RedirectAttributes redirectAttributes
     ) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         try {
             orderService.updateOrderStatus(id, status, adminEmail);
@@ -86,8 +96,7 @@ public class AdminOrderController {
             @RequestParam("paymentStatus") PaymentStatus paymentStatus,
             RedirectAttributes redirectAttributes
     ) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         try {
             orderService.updatePaymentStatus(id, paymentStatus, adminEmail);

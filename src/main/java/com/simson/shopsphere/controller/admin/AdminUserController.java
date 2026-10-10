@@ -1,10 +1,13 @@
 package com.simson.shopsphere.controller.admin;
 
+import com.simson.shopsphere.entity.Role;
 import com.simson.shopsphere.entity.User;
+import com.simson.shopsphere.exception.UnauthorizedAccessException;
 import com.simson.shopsphere.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,14 +15,22 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/users")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminUserController {
+
+    private final UserService userService;
 
     public AdminUserController(UserService userService) {
         this.userService = userService;
     }
 
-
-    private final UserService userService;
+    private String getAuthenticatedAdminEmail() {
+        User currentAdmin = userService.getCurrentAuthenticatedUser();
+        if (currentAdmin == null || currentAdmin.getRole() != Role.ADMIN) {
+            throw new UnauthorizedAccessException("Administrative authentication required.");
+        }
+        return currentAdmin.getEmail();
+    }
 
     @GetMapping
     public String listUsers(
@@ -39,8 +50,7 @@ public class AdminUserController {
 
     @PostMapping("/{id}/toggle")
     public String toggleUserStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         try {
             userService.toggleUserStatus(id, adminEmail);

@@ -417,17 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Quick fill credentials helper on login page
-    const fillAdminBtn = document.getElementById("fill-admin-btn");
-    if (fillAdminBtn) {
-        fillAdminBtn.addEventListener("click", () => {
-            const emailField = document.getElementById("email");
-            const passField = document.getElementById("password");
-            if (emailField) emailField.value = "admin@shopsphere.com";
-            if (passField) passField.value = "Admin@123";
-        });
-    }
-
+    // Demo helper: quick fill customer credentials on login page if present (dev/demo only)
     const fillUserBtn = document.getElementById("fill-user-btn");
     if (fillUserBtn) {
         fillUserBtn.addEventListener("click", () => {

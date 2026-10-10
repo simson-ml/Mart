@@ -19,6 +19,9 @@ public class AuthController {
     private final UserService userService;
     private final com.simson.shopsphere.service.PasswordResetService passwordResetService;
 
+    @org.springframework.beans.factory.annotation.Value("${app.demo.quick-fill.enabled:false}")
+    private boolean demoQuickFillEnabled;
+
     public AuthController(UserService userService, com.simson.shopsphere.service.PasswordResetService passwordResetService) {
         this.userService = userService;
         this.passwordResetService = passwordResetService;
@@ -39,6 +42,7 @@ public class AuthController {
         if (logout != null) {
             model.addAttribute("successMessage", "You have been logged out successfully.");
         }
+        model.addAttribute("demoQuickFillEnabled", demoQuickFillEnabled);
         return "auth/login";
     }
 

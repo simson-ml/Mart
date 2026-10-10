@@ -55,17 +55,14 @@
                     </button>
                 </form>
 
-                <!-- Demo Viva Presentation Helper Buttons -->
-                <div class="bg-light p-3 rounded-3 mt-2 border">
+                <!-- Demo Customer Presentation Helper (Dev/Viva profile only; Admin credentials NEVER exposed) -->
+                <div th:if="${demoQuickFillEnabled}" class="bg-light p-3 rounded-3 mt-2 border">
                     <div class="small fw-bold text-muted text-uppercase mb-2 text-center">
-                        <i class="bi bi-laptop me-1"></i> Quick-Fill Demo Credentials (Viva)
+                        <i class="bi bi-person-badge me-1"></i> Demo Customer Quick-Fill (Viva / Dev)
                     </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" id="fill-admin-btn" class="btn btn-outline-warning btn-sm w-50 text-dark fw-bold">
-                            <i class="bi bi-shield-lock me-1"></i> Admin Login
-                        </button>
-                        <button type="button" id="fill-user-btn" class="btn btn-outline-primary btn-sm w-50 fw-bold">
-                            <i class="bi bi-person me-1"></i> Customer Login
+                    <div class="d-grid">
+                        <button type="button" id="fill-user-btn" class="btn btn-outline-primary btn-sm fw-bold">
+                            <i class="bi bi-person me-1"></i> Quick-Fill Demo Customer (Rahul)
                         </button>
                     </div>
                 </div>

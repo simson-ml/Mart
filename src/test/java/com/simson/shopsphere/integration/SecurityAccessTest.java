@@ -120,4 +120,63 @@ class SecurityAccessTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl("/account/addresses"));
     }
+
+    @Test
+    @DisplayName("Login page must not contain admin credentials or admin quick-fill button")
+    void testLoginPageDoesNotExposeAdminCredentials() throws Exception {
+        org.springframework.test.web.servlet.MvcResult result = mockMvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertFalse(content.contains("admin@shopsphere.com"), "Login HTML should not contain admin email");
+        org.junit.jupiter.api.Assertions.assertFalse(content.contains("Admin@123"), "Login HTML should not contain admin password");
+        org.junit.jupiter.api.Assertions.assertFalse(content.contains("fill-admin-btn"), "Login HTML should not contain fill-admin-btn button ID");
+    }
+
+    @Test
+    @DisplayName("Static JavaScript assets must not contain admin credentials or fill-admin-btn")
+    void testStaticJsDoesNotContainAdminCredentials() throws Exception {
+        java.nio.file.Path jsPath = java.nio.file.Paths.get("src/main/resources/static/js/main.js");
+        if (java.nio.file.Files.exists(jsPath)) {
+            String jsContent = java.nio.file.Files.readString(jsPath);
+            org.junit.jupiter.api.Assertions.assertFalse(jsContent.contains("Admin@123"), "main.js must not contain plaintext admin password");
+            org.junit.jupiter.api.Assertions.assertFalse(jsContent.contains("admin@shopsphere.com"), "main.js must not contain admin email");
+            org.junit.jupiter.api.Assertions.assertFalse(jsContent.contains("fill-admin-btn"), "main.js must not contain fill-admin-btn handler");
+        }
+    }
+
+    @Test
+    @WithMockUser(username = "customer@example.com", roles = {"USER"})
+    @DisplayName("Customer role must receive 403 Forbidden on all admin POST mutation endpoints")
+    void testCustomerForbiddenFromAdminMutations() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/admin/categories/create")
+                .param("name", "Malicious Category")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/admin/products/create")
+                .param("name", "Malicious Product")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/admin/users/1/toggle")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/admin/orders/1/status")
+                .param("status", "DELIVERED")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Anonymous user must be redirected to login on admin mutation endpoints")
+    void testAnonymousRedirectedFromAdminMutations() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/admin/categories/create")
+                .param("name", "Test Category")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
 }

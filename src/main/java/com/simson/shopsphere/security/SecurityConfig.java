@@ -43,6 +43,9 @@ public class SecurityConfig {
             .headers(headers -> headers
                 .addHeaderWriter(new XFrameOptionsHeaderWriter(XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN))
             )
+            .sessionManagement(session -> session
+                .sessionFixation().changeSessionId()
+            )
             .csrf(csrf -> csrf
                 .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .ignoringRequestMatchers(

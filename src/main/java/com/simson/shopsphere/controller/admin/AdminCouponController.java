@@ -3,12 +3,15 @@ package com.simson.shopsphere.controller.admin;
 import com.simson.shopsphere.dto.CouponDto;
 import com.simson.shopsphere.entity.Coupon;
 import com.simson.shopsphere.entity.DiscountType;
+import com.simson.shopsphere.entity.Role;
 import com.simson.shopsphere.entity.User;
+import com.simson.shopsphere.exception.UnauthorizedAccessException;
 import com.simson.shopsphere.service.CouponService;
 import com.simson.shopsphere.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,16 +22,24 @@ import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping("/admin/coupons")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminCouponController {
+
+    private final CouponService couponService;
+    private final UserService userService;
 
     public AdminCouponController(CouponService couponService, UserService userService) {
         this.couponService = couponService;
         this.userService = userService;
     }
 
-
-    private final CouponService couponService;
-    private final UserService userService;
+    private String getAuthenticatedAdminEmail() {
+        User currentAdmin = userService.getCurrentAuthenticatedUser();
+        if (currentAdmin == null || currentAdmin.getRole() != Role.ADMIN) {
+            throw new UnauthorizedAccessException("Administrative authentication required.");
+        }
+        return currentAdmin.getEmail();
+    }
 
     @GetMapping
     public String listCoupons(
@@ -61,8 +72,7 @@ public class AdminCouponController {
             RedirectAttributes redirectAttributes,
             Model model
     ) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("couponsPage", couponService.getAllCouponsAdmin(PageRequest.of(0, 10)));
@@ -82,8 +92,7 @@ public class AdminCouponController {
 
     @PostMapping("/toggle/{id}")
     public String toggleCouponStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         couponService.toggleCouponStatus(id, adminEmail);
         redirectAttributes.addFlashAttribute("infoMessage", "Coupon status updated.");

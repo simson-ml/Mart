@@ -2,12 +2,15 @@ package com.simson.shopsphere.controller.admin;
 
 import com.simson.shopsphere.dto.ProductDto;
 import com.simson.shopsphere.entity.Product;
+import com.simson.shopsphere.entity.Role;
 import com.simson.shopsphere.entity.User;
+import com.simson.shopsphere.exception.UnauthorizedAccessException;
 import com.simson.shopsphere.service.CategoryService;
 import com.simson.shopsphere.service.ProductService;
 import com.simson.shopsphere.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,8 +19,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/products")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminProductController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AdminProductController.class);
+
+    private final ProductService productService;
+    private final CategoryService categoryService;
+    private final UserService userService;
 
     public AdminProductController(ProductService productService, CategoryService categoryService, UserService userService) {
         this.productService = productService;
@@ -25,10 +33,13 @@ public class AdminProductController {
         this.userService = userService;
     }
 
-
-    private final ProductService productService;
-    private final CategoryService categoryService;
-    private final UserService userService;
+    private String getAuthenticatedAdminEmail() {
+        User currentAdmin = userService.getCurrentAuthenticatedUser();
+        if (currentAdmin == null || currentAdmin.getRole() != Role.ADMIN) {
+            throw new UnauthorizedAccessException("Administrative authentication required.");
+        }
+        return currentAdmin.getEmail();
+    }
 
     @GetMapping
     public String listProducts(
@@ -74,8 +85,7 @@ public class AdminProductController {
             return "admin/products/form";
         }
 
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         try {
             productService.createProduct(productDto, adminEmail);
@@ -127,8 +137,7 @@ public class AdminProductController {
             return "admin/products/form";
         }
 
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         try {
             productService.updateProduct(id, productDto, adminEmail);
@@ -148,8 +157,7 @@ public class AdminProductController {
             @RequestParam("stockQuantity") int stockQuantity,
             RedirectAttributes redirectAttributes
     ) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         productService.updateStock(id, stockQuantity, adminEmail);
         redirectAttributes.addFlashAttribute("successMessage", "Inventory updated successfully.");
@@ -158,8 +166,7 @@ public class AdminProductController {
 
     @PostMapping("/toggle/{id}")
     public String toggleProductStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        User currentAdmin = userService.getCurrentAuthenticatedUser();
-        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin@shopsphere.com";
+        String adminEmail = getAuthenticatedAdminEmail();
 
         productService.toggleProductStatus(id, adminEmail);
         redirectAttributes.addFlashAttribute("infoMessage", "Product status updated.");
