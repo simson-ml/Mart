@@ -10,7 +10,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 [![Thymeleaf](https://img.shields.io/badge/Thymeleaf-3.x-green.svg)](https://www.thymeleaf.org/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com/)
-[![Tests](https://img.shields.io/badge/Tests-53%20Passed%20(100%25)-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-114%20Passed%20(100%25)-brightgreen.svg)]()
 
 ---
 
@@ -55,6 +55,17 @@ Designed and developed by **SIMSON S**, ShopSphere combines modern consumer-faci
 - **File Upload Protection**: Filename sanitization, UUID obfuscation, path canonicalization traversal checks, 5MB file cap, and strict MIME/extension whitelist (`jpg`, `jpeg`, `png`, `webp`).
 - **CSRF & XSS Protection**: Synchronizer tokens on all state-mutating requests and automatic header injection on AJAX calls.
 - **Dynamic Secret Seeding**: Environment-variable-driven admin seeding (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) that only seeds when 0 admins exist and never overwrites existing passwords on startup.
+
+### 🤖 4. ShopSphere AI Assistant (Intelligent Store Chatbot)
+- **Modern Floating Widget**: Embedded in all customer-facing views (`index`, `/products`, `/cart`, `/checkout`, `/orders`, etc.) with ShopSphere brand colors, suggested question chips, character counter, mobile-responsive layout, and safe text rendering (XSS protection).
+- **Dual-Provider Architecture**:
+  - `MockChatProvider`: 100% offline, deterministic provider answering at least 10 domain FAQ topics with zero external API dependencies.
+  - `GeminiChatProvider`: Production LLM integration powered by Google Gemini API (`gemini-1.5-flash`), with server-side API key protection and configurable timeouts.
+- **Server-Side Domain Guardrails**: Fixed system instruction restricting questions exclusively to ShopSphere product catalog, availability, cart operations, checkout, payment simulation, and order tracking. Prompt injection and jailbreak attempts are safely neutralized.
+- **Per-Session Sliding-Window Rate Limiting**: Enforces a strict quota of at most 10 messages per rolling 60-second window per session (returns `429 Too Many Requests`).
+- **Bounded In-Memory Session Caching**: Automatically caches identical normalized questions within an active session (30-minute expiry, max 50 entries/session) to eliminate redundant LLM invocations without leaking cross-customer state.
+- **Graceful Failure Handling**: If the Gemini provider times out, encounters rate limiting, or has an invalid/missing API key, the chatbot automatically falls back to `MockChatProvider` with zero user disruption.
+- **Safety Boundary Note**: The assistant provides store assistance and guidance only; it **never** initiates monetary transactions, executes arbitrary code/SQL, or modifies order states autonomously.
 
 ---
 
@@ -138,23 +149,106 @@ Once running, access the portal at:
 
 ---
 
+---
+
+## ⚙️ AI Chatbot Configuration & Local Setup
+
+### 1. Zero-Network Default (Mock Provider)
+By default, the application runs with the offline deterministic `MockChatProvider`. No API key or internet access is required:
+```properties
+ai.chatbot.provider=mock
+```
+This provider is fully functional and deterministically handles queries across all 10 domain topics:
+1. Product browsing & catalog navigation
+2. Product search & keyword matching
+3. Category filters & sidebar refinement
+4. Price details & real-time stock availability
+5. Adding items to cart & guest session preservation
+6. Modifying cart quantities & removing items
+7. Multi-step checkout workflow & shipping selection
+8. Simulated payment gateways (UPI 12-digit UTR confirmation & Cash on Delivery)
+9. Order history & status timeline tracking
+10. Account login, registration, and profile navigation
+
+### 2. Enabling Live Google Gemini LLM Provider
+To switch to the real Google Gemini LLM:
+1. Obtain an API key from Google AI Studio.
+2. Set the environment variable in your terminal before launching:
+```powershell
+$env:CHATBOT_PROVIDER = "gemini"
+$env:GEMINI_API_KEY = "your_actual_gemini_api_key_here"
+$env:GEMINI_MODEL = "gemini-1.5-flash"
+```
+Or define in `application.properties`:
+```properties
+ai.chatbot.provider=gemini
+ai.chatbot.gemini-api-key=your_actual_gemini_api_key_here
+ai.chatbot.gemini-model=gemini-1.5-flash
+```
+*Security Note: API keys are strictly kept server-side and are NEVER returned in API responses or sent to the browser.*
+
+### 3. Chatbot REST API Endpoint
+- **URL**: `POST /api/v1/chat`
+- **Content-Type**: `application/json`
+- **Request Body**:
+```json
+{
+  "message": "How do I check product availability?"
+}
+```
+- **Response Envelope (200 OK)**:
+```json
+{
+  "success": true,
+  "data": {
+    "reply": "Live prices, discount percentages, and current inventory levels are displayed directly on every product card..."
+  },
+  "error": null
+}
+```
+- **Error Status Codes**:
+  - `400 Bad Request`: Message is blank, null, or exceeds 1,000 characters (`VALIDATION_ERROR`).
+  - `429 Too Many Requests`: Exceeded 10 requests per rolling 60 seconds per session (`RATE_LIMIT_EXCEEDED`).
+  - `503 Service Unavailable`: AI provider unavailable and fallback cannot be produced (`PROVIDER_UNAVAILABLE`).
+
+---
+
 ## 🧪 Automated Testing Suite
 
-The application includes 53 comprehensive unit and integration tests with **100% pass rate**:
+The application includes 114 comprehensive unit and integration tests with **100% pass rate**:
 
 ```powershell
 mvn test
 ```
 
-- `OrderStatusTransitionValidatorTest`: Verifies all valid, invalid, cancellation, return, and terminal state transitions.
-- `PasswordResetServiceTest`: Tests token generation, single-use invalidation, expiry checks, and password updates.
-- `FileStorageSecurityTest`: Tests path traversal rejection, extension whitelist, MIME matching, and file size limits.
-- `CartServiceTest`: Tests cart totals, quantity updates, and stock validations.
-- `CouponServiceTest`: Tests coupon calculations, discount caps, and expiry.
-- `OrderServiceTest`: Tests pessimistic concurrency order placement and inventory deduction.
-- `ProductServiceTest`: Tests product filtering and catalog lookups.
-- `AuthenticationIntegrationTest`: Tests user registration and login workflows.
-- `SecurityAccessTest`: Tests RBAC endpoint security for admin and public routes.
+### Core Business & Security Tests (80 tests)
+- `OrderStatusTransitionValidatorTest` (26 tests): Verifies state-machine rules and illegal jumps.
+- `SecurityAccessTest` (14 tests): Verifies RBAC role enforcement and public storefront paths.
+- `OrderConfirmationAndPaymentIntegrationTest` (8 tests): Verifies end-to-end checkout, payment simulation, and UTR submission.
+- `PasswordResetServiceTest` (6 tests): Single-use token generation, expiry, and password resetting.
+- `PaymentServiceTest` (5 tests): UPI UTR validation, COD status transitions, and payment logging.
+- `FileStorageSecurityTest` (5 tests): Path traversal defense, file type whitelisting, and size restrictions.
+- `AddressServiceTest` (4 tests): Multi-address management and default address enforcement.
+- `CartServiceTest` (3 tests): Cart arithmetic, quantity caps, and stock limits.
+- `CouponServiceTest` (3 tests): Min order constraints, percentage discounts, and max deduction caps.
+- `ProductServiceTest` (3 tests): Faceted criteria query execution and pagination.
+- `OrderServiceTest` (2 tests): Pessimistic write locking and inventory decrement.
+- `AuthenticationIntegrationTest` (1 test): Customer registration and authentication lifecycle.
+
+### AI Chatbot Tests (34 tests)
+- `MockChatProviderTest` (13 tests): Validates all 10 FAQ domain answers, greetings, and restricted-scope response for off-topic queries.
+- `ChatServiceTest` (7 tests): Input validation, rate limiting, session cache isolation, and transparent Gemini fallback to Mock.
+- `ApiChatControllerTest` (5 tests): MockMvc integration tests for 200 envelopes, 400 validation errors, 429 rate limit triggers, and guest access.
+- `GeminiChatProviderTest` (4 tests): Missing key validation, response parsing, 403 HTTP error masking, and network timeout handling without secret leakage.
+- `SessionChatCacheTest` (3 tests): Question normalization, cache hits, and strict session isolation.
+- `SessionRateLimiterTest` (2 tests): Rolling 60s window limit (10 requests) and multi-session independence.
+
+---
+
+## 🏛️ Architecture Note: Spring Boot vs. Servlet Specification
+The ShopSphere platform is built on **Spring Boot 3.3.4 (Java 21, Spring MVC, Spring Security 6, Spring Data JPA)**.
+While the academic project guideline originally outlined a raw Servlet-based architecture (`HttpServlet` / `web.xml`), ShopSphere utilizes Spring Boot's modern MVC controller and filter chain (`@RestController`, `@Service`, Spring Security `SecurityFilterChain`, `CookieCsrfTokenRepository`).
+The AI Chatbot integration seamlessly follows this Spring Boot paradigm via `ApiChatController` at `POST /api/v1/chat`, dependency-injected `ChatProvider` implementations, thread-safe session-level sliding-window rate limiters, and in-memory expiring caches without introducing conflicting legacy servlets or framework migrations.
 
 ---
 
@@ -172,3 +266,4 @@ mvn test
 ---
 
 **ShopSphere** &copy; 2026. Designed and Developed by **SIMSON S**.
+

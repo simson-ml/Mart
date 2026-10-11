@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="chatbot">
+    <!-- Chatbot Widget Launcher & Panel -->
+    <div id="shopsphere-chat-widget" class="shopsphere-chat-widget">
+        <!-- Floating Launcher Button -->
+        <button id="chatLauncherBtn" class="chat-launcher-btn shadow-lg" type="button" aria-label="Open ShopSphere AI Assistant" title="Chat with ShopSphere AI Assistant">
+            <i class="bi bi-chat-dots-fill chat-launcher-icon"></i>
+            <span class="chat-launcher-badge">AI</span>
+        </button>
+
+        <!-- Floating Chat Panel -->
+        <div id="chatPanel" class="chat-panel shadow-lg d-none" role="dialog" aria-labelledby="chatHeaderTitle" aria-modal="false">
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="chat-avatar">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div>
+                        <h6 id="chatHeaderTitle" class="chat-title mb-0">ShopSphere AI Assistant</h6>
+                        <small class="chat-subtitle"><span class="status-indicator"></span> Online • Store Assistant</small>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button id="chatMinimizeBtn" type="button" class="btn btn-sm btn-link text-white p-1" aria-label="Close Chat">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Message Area -->
+            <div id="chatMessages" class="chat-messages" tabindex="0">
+                <!-- Welcome Message Bubble -->
+                <div class="chat-message assistant">
+                    <div class="chat-bubble">
+                        <p class="mb-1"><strong>Welcome to ShopSphere!</strong> 👋</p>
+                        <p class="mb-0">I am your AI shopping assistant. How can I help you today? Ask about product searches, stock availability, category filters, cart operations, simulated payment, or order tracking.</p>
+                    </div>
+                </div>
+
+                <!-- Suggested Question Chips -->
+                <div class="chat-suggestions mb-2">
+                    <span class="suggestion-chip" data-query="How can I find a product?">How can I find a product?</span>
+                    <span class="suggestion-chip" data-query="How does the shopping cart work?">How does the shopping cart work?</span>
+                    <span class="suggestion-chip" data-query="How can I check product availability?">How can I check product availability?</span>
+                    <span class="suggestion-chip" data-query="How do I place an order?">How do I place an order?</span>
+                    <span class="suggestion-chip" data-query="Where can I find my order history?">Where can I find my order history?</span>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="chatLoadingIndicator" class="chat-loading d-none">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <small class="text-muted ms-2">Assistant is typing...</small>
+            </div>
+
+            <!-- Footer / Input Form -->
+            <form id="chatForm" class="chat-footer">
+                <div class="input-group">
+                    <textarea id="chatInput" class="form-control chat-input" placeholder="Ask about products, orders, cart..." rows="1" maxlength="1000" required></textarea>
+                    <button id="chatSendBtn" class="btn btn-warning chat-send-btn" type="submit" aria-label="Send Message">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-1 px-1">
+                    <small class="text-muted chat-hint">Enter to send • Shift+Enter for newline</small>
+                    <small id="chatCharCounter" class="text-muted chat-counter">0/1000</small>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

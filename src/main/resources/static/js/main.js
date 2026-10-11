@@ -427,4 +427,165 @@ document.addEventListener("DOMContentLoaded", function () {
             if (passField) passField.value = "User@123";
         });
     }
+
+    /* ==============================================================================
+       SHOPSPHERE AI CHATBOT WIDGET CONTROLLER
+       ============================================================================== */
+    const chatLauncherBtn = document.getElementById("chatLauncherBtn");
+    const chatPanel = document.getElementById("chatPanel");
+    const chatMinimizeBtn = document.getElementById("chatMinimizeBtn");
+    const chatMessages = document.getElementById("chatMessages");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const chatSendBtn = document.getElementById("chatSendBtn");
+    const chatLoadingIndicator = document.getElementById("chatLoadingIndicator");
+    const chatCharCounter = document.getElementById("chatCharCounter");
+
+    if (chatLauncherBtn && chatPanel && chatForm && chatInput) {
+        // Toggle Panel
+        chatLauncherBtn.addEventListener("click", function () {
+            const isHidden = chatPanel.classList.contains("d-none");
+            if (isHidden) {
+                chatPanel.classList.remove("d-none");
+                chatInput.focus();
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } else {
+                chatPanel.classList.add("d-none");
+            }
+        });
+
+        // Minimize / Close Button
+        if (chatMinimizeBtn) {
+            chatMinimizeBtn.addEventListener("click", function () {
+                chatPanel.classList.add("d-none");
+            });
+        }
+
+        // Live Character Counter
+        chatInput.addEventListener("input", function () {
+            const len = chatInput.value.length;
+            if (chatCharCounter) {
+                chatCharCounter.textContent = `${len}/1000`;
+                if (len > 950) {
+                    chatCharCounter.classList.add("text-danger");
+                } else {
+                    chatCharCounter.classList.remove("text-danger");
+                }
+            }
+        });
+
+        // Enter key to send (Shift+Enter for newline)
+        chatInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event("submit"));
+            }
+        });
+
+        // Suggested Chips Handler
+        document.querySelectorAll(".suggestion-chip").forEach(chip => {
+            chip.addEventListener("click", function () {
+                const query = this.getAttribute("data-query");
+                if (query && !chatSendBtn.disabled) {
+                    submitChatMessage(query);
+                }
+            });
+        });
+
+        // Form Submit Handler
+        chatForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message || chatSendBtn.disabled) {
+                return;
+            }
+            if (message.length > 1000) {
+                appendChatMessage("assistant", "Your message exceeds the 1,000 character limit. Please shorten your question.");
+                return;
+            }
+            submitChatMessage(message);
+        });
+
+        // Helper: Safe Message Renderer (Never renders untrusted HTML)
+        function appendChatMessage(role, text) {
+            const msgRow = document.createElement("div");
+            msgRow.className = `chat-message ${role}`;
+
+            const bubble = document.createElement("div");
+            bubble.className = "chat-bubble";
+            // Safe text node prevents XSS attacks
+            bubble.textContent = text;
+
+            msgRow.appendChild(bubble);
+            chatMessages.appendChild(msgRow);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Helper: Core async chat submission
+        function submitChatMessage(messageText) {
+            // Display user message immediately
+            appendChatMessage("user", messageText);
+            chatInput.value = "";
+            if (chatCharCounter) {
+                chatCharCounter.textContent = "0/1000";
+                chatCharCounter.classList.remove("text-danger");
+            }
+
+            // Disable controls to prevent duplicate submissions
+            chatSendBtn.disabled = true;
+            chatInput.disabled = true;
+            chatLoadingIndicator.classList.remove("d-none");
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const headers = getCsrfHeaders();
+
+            fetch("/api/v1/chat", {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify({ message: messageText })
+            })
+            .then(async response => {
+                let json;
+                try {
+                    json = await response.json();
+                } catch (parseErr) {
+                    json = null;
+                }
+
+                if (response.ok && json && json.success && json.data) {
+                    appendChatMessage("assistant", json.data.reply || "Thank you for reaching out.");
+                } else if (response.status === 429) {
+                    const errMsg = (json && json.error && json.error.message)
+                        ? json.error.message
+                        : "Rate limit exceeded. You can send up to 10 messages per minute. Please wait a moment.";
+                    appendChatMessage("assistant", `⚠️ ${errMsg}`);
+                } else if (response.status === 400) {
+                    const errMsg = (json && json.error && json.error.message)
+                        ? json.error.message
+                        : "Invalid request. Please enter a valid message.";
+                    appendChatMessage("assistant", `⚠️ ${errMsg}`);
+                } else if (response.status === 503) {
+                    appendChatMessage("assistant", "The assistant is temporarily unavailable. Please try again shortly.");
+                } else {
+                    const errMsg = (json && json.error && json.error.message)
+                        ? json.error.message
+                        : "I encountered an error answering your question. Please try asking again.";
+                    appendChatMessage("assistant", errMsg);
+                }
+            })
+            .catch(error => {
+                console.error("Chat communication failure:", error);
+                appendChatMessage("assistant", "Network connection error. Please check your internet connection and try again.");
+            })
+            .finally(() => {
+                // Re-enable controls
+                chatSendBtn.disabled = false;
+                chatInput.disabled = false;
+                chatLoadingIndicator.classList.add("d-none");
+                chatInput.focus();
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        }
+    }
 });
+

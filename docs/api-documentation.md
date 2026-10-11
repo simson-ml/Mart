@@ -35,3 +35,61 @@ http://localhost:8080/api-docs
 
 ### 4. Coupon API (Authenticated)
 - `GET /api/coupons/validate?code={code}&orderAmount={amount}` — Compute discount amount for coupon.
+
+### 5. AI Chatbot API (Public / Authenticated)
+- `POST /api/v1/chat` — Send customer questions to the ShopSphere AI Assistant.
+
+**Request Envelope:**
+```json
+{
+  "message": "How can I find products in a category?"
+}
+```
+
+**Successful Response (HTTP 200):**
+```json
+{
+  "success": true,
+  "data": {
+    "reply": "You can browse products and use the available category filters on the /products page."
+  },
+  "error": null
+}
+```
+
+**Validation Error Response (HTTP 400):**
+```json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Please enter a valid message."
+  }
+}
+```
+
+**Rate Limit Exceeded Response (HTTP 429):**
+```json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Rate limit exceeded. Maximum 10 requests per minute allowed."
+  }
+}
+```
+
+**Provider Unavailable Response (HTTP 503):**
+```json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "PROVIDER_UNAVAILABLE",
+    "message": "The AI assistant is temporarily unavailable. Please try again shortly."
+  }
+}
+```
+

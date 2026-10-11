@@ -84,6 +84,7 @@ public class SecurityConfig {
                     "/api/products/**",
                     "/api/cart/**",
                     "/api/compare/**",
+                    "/api/v1/chat",
                     "/error/**"
                 ).permitAll()
                 // Admin Portal

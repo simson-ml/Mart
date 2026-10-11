@@ -101,3 +101,42 @@ com.simson.shopsphere
 3. **Resilience & Safe State Transitions**:
    - Orders follow a strict state machine (`PLACED` -> `CONFIRMED` -> `PACKED` -> `SHIPPED` -> `OUT_FOR_DELIVERY` -> `DELIVERED`).
    - Order cancellations restore the reserved inventory immediately.
+
+---
+
+## 4. AI Chatbot Architecture & Request Flow
+
+```
+[Customer Browser / Floating Widget]
+              │
+              │  POST /api/v1/chat  {"message": "..."}
+              ▼
+[ApiChatController]
+              │
+              │  Validates input (length <= 1,000, non-blank)
+              ▼
+[ChatServiceImpl]
+              │
+              ├──► [SessionRateLimiter] ──► (10 req/min per session? Exceeded -> HTTP 429)
+              │
+              ├──► [SessionChatCache]   ──► (Identical normalized question in session? Hit -> Return cached)
+              │
+              ├──► Provider Selection & Context Assembly
+              │         │
+              │         ├─ Provider = "gemini" ──► [GeminiChatProvider] (API Key server-side, 10s timeout)
+              │         │                               │
+              │         │                               ├── Success: parse candidate JSON -> reply
+              │         │                               └── Failure/Timeout: catch & fallback ──┐
+              │         │                                                                       ▼
+              │         └─ Provider = "mock" (or fallback) ──────────────────────────► [MockChatProvider]
+              │                                                                           (10 Domain FAQs,
+              │                                                                            Scope Boundary)
+              ▼
+[Response Cache & Envelope] ──► {"success": true, "data": {"reply": "..."}, "error": null}
+```
+
+### Architectural Note: Spring Boot vs. Servlet Specification
+The ShopSphere platform is built on **Spring Boot 3.3.4 (Java 21, Spring MVC, Spring Security 6, Spring Data JPA)**.
+While the academic project guideline originally outlined a raw Servlet-based architecture (`HttpServlet` / `web.xml`), ShopSphere utilizes Spring Boot's modern MVC controller and filter chain (`@RestController`, `@Service`, Spring Security `SecurityFilterChain`, `CookieCsrfTokenRepository`).
+The AI Chatbot integration seamlessly follows this Spring Boot paradigm via `ApiChatController` at `POST /api/v1/chat`, dependency-injected `ChatProvider` implementations, thread-safe session-level sliding-window rate limiters, and in-memory expiring caches without introducing conflicting legacy servlets or framework migrations.
+
