@@ -36,12 +36,23 @@ public interface ProductService {
     Product getProductById(Long id);
     Product getProductBySlug(String slug);
 
-    // Admin
+    // Admin & Moderation
     Product createProduct(ProductDto dto, String adminEmail);
     Product updateProduct(Long id, ProductDto dto, String adminEmail);
     void updateStock(Long id, int newQuantity, String adminEmail);
     void toggleProductStatus(Long id, String adminEmail);
+    void deleteProduct(Long id, String adminEmail);
     List<Product> getLowStockProducts(int threshold);
     long getTotalProductCount();
     long getLowStockCount(int threshold);
+
+    // Seller Product Management
+    Product createSellerProduct(ProductDto dto, com.simson.shopsphere.entity.User seller);
+    Product updateSellerProduct(Long id, ProductDto dto, com.simson.shopsphere.entity.User seller);
+    void updateSellerStock(Long id, int newQuantity, com.simson.shopsphere.entity.User seller);
+    void deleteSellerProduct(Long id, com.simson.shopsphere.entity.User seller);
+    Page<Product> getSellerProducts(com.simson.shopsphere.entity.User seller, int page, int size);
+    long getSellerProductCount(com.simson.shopsphere.entity.User seller);
+    long getSellerActiveProductCount(com.simson.shopsphere.entity.User seller);
+    long getSellerLowStockCount(com.simson.shopsphere.entity.User seller, int threshold);
 }

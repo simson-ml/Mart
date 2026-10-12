@@ -10,15 +10,15 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 [![Thymeleaf](https://img.shields.io/badge/Thymeleaf-3.x-green.svg)](https://www.thymeleaf.org/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com/)
-[![Tests](https://img.shields.io/badge/Tests-114%20Passed%20(100%25)-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-125%20Passed%20(100%25)-brightgreen.svg)]()
 
 ---
 
 ## 📌 Project Overview
 
-**ShopSphere** is a high-performance, secure, production-grade e-commerce application engineered from scratch using **Java 21 LTS**, **Spring Boot 3**, **Spring Security 6**, **Spring Data JPA / Hibernate 6**, **PostgreSQL / H2**, and **Thymeleaf HTML5 / Bootstrap 5**.
+**ShopSphere** is a high-performance, secure, multi-seller enterprise e-commerce platform engineered from scratch using **Java 21 LTS**, **Spring Boot 3.3.4**, **Spring Security 6**, **Spring Data JPA / Hibernate 6**, **PostgreSQL / H2**, and **Thymeleaf HTML5 / Bootstrap 5**.
 
-Designed and developed by **SIMSON S**, ShopSphere combines modern consumer-facing e-commerce features with an enterprise-ready administrative back office, strict state-machine order workflows, concurrency-safe inventory controls, and robust application security.
+Designed and developed by **SIMSON S**, ShopSphere combines modern consumer-facing e-commerce features with an enterprise-ready administrative back office, a multi-vendor seller portal, strict state-machine order workflows, concurrency-safe inventory controls, and robust application security.
 
 ---
 
@@ -39,7 +39,14 @@ Designed and developed by **SIMSON S**, ShopSphere combines modern consumer-faci
 - **Downloadable & Printable Tax Invoices**: Printable GST-compliant tax invoices with breakdown for subtotal, savings, delivery fee, and net total.
 - **Dark / Light Mode**: Dynamic theme switcher with `localStorage` persistence and CSS variable support.
 
-### 🛡️ 2. Back-Office Administrative Portal (`/admin`)
+### 🏬 2. Multi-Vendor Seller Marketplace Portal (`/seller`)
+- **Seller Executive Dashboard**: Real-time KPIs for total listings, live products, low-stock alerts (&le; 5), and incoming customer orders.
+- **Product Listing Management**: Create, edit, and archive marketplace listings with strict server-side ownership isolation (cross-seller modification strictly prohibited).
+- **Inventory Stock Controls**: Real-time inline inventory updates for active items.
+- **Referential Integrity & Safe Archival**: Products with existing order history are safely deactivated rather than hard-deleted to preserve order history and foreign key constraints.
+- **Incoming Orders View**: View and monitor customer orders that contain items fulfilled by the seller.
+
+### 🛡️ 3. Back-Office Administrative Portal (`/admin`)
 - **Executive Real-Time Dashboard**: Live business KPIs (Total Revenue, Today's Sales, Monthly Sales, Total Orders, Active Catalog, Pending Fulfillment, Return Requests, and Low-Stock Warnings) backed by **Chart.js** revenue trends and category share visualizers.
 - **Product Management**: Full CRUD, secure multipart file uploads, SKU duplicate prevention, inventory replenishment modals, and active toggles.
 - **Category Management**: Create, update, and toggle category visibility.
@@ -48,7 +55,7 @@ Designed and developed by **SIMSON S**, ShopSphere combines modern consumer-faci
 - **Coupon Manager**: Create promo discount codes with start/end expiry and usage constraints.
 - **Audit Logging**: Immutable audit logs capturing user email, action, entity, entity ID, details, and client IP resolution (handling `X-Forwarded-For` and proxy networks).
 
-### 🔒 3. Enterprise Security & Concurrency Engineering
+### 🔒 4. Enterprise Security & Concurrency Engineering
 - **State Machine Transition Validation**: Centralized `OrderStatusTransitionValidator` preventing illegal state jumps (e.g. `PLACED` cannot skip directly to `DELIVERED` or `REFUNDED`).
 - **Pessimistic Locking (`@Lock(LockModeType.PESSIMISTIC_WRITE)`)**: Guarantees zero stock overselling during simultaneous high-concurrency checkouts.
 - **Token-Based Password Reset**: Single-use 15-minute cryptographically strong reset tokens with automated token invalidation.
@@ -56,7 +63,7 @@ Designed and developed by **SIMSON S**, ShopSphere combines modern consumer-faci
 - **CSRF & XSS Protection**: Synchronizer tokens on all state-mutating requests and automatic header injection on AJAX calls.
 - **Dynamic Secret Seeding**: Environment-variable-driven admin seeding (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) that only seeds when 0 admins exist and never overwrites existing passwords on startup.
 
-### 🤖 4. ShopSphere AI Assistant (Intelligent Store Chatbot)
+### 🤖 5. ShopSphere AI Assistant (Intelligent Store Chatbot)
 - **Modern Floating Widget**: Embedded in all customer-facing views (`index`, `/products`, `/cart`, `/checkout`, `/orders`, etc.) with ShopSphere brand colors, suggested question chips, character counter, mobile-responsive layout, and safe text rendering (XSS protection).
 - **Dual-Provider Architecture**:
   - `MockChatProvider`: 100% offline, deterministic provider answering at least 10 domain FAQ topics with zero external API dependencies.
@@ -78,11 +85,11 @@ Browser / Client (Thymeleaf, Bootstrap 5, Fetch API, Dark Theme)
                          ↓
                Controllers (MVC & REST Endpoints)
                          ↓
-             Business Services (@Transactional, State Engine)
+              Business Services (@Transactional, State Engine)
                          ↓
-             Spring Data JPA Repositories (Hibernate 6)
+              Spring Data JPA Repositories (Hibernate 6)
                          ↓
-       PostgreSQL 16 (Production) / H2 In-Memory (Development)
+        PostgreSQL 16 (Production) / H2 In-Memory (Development)
 ```
 
 ---
@@ -94,7 +101,8 @@ com.simson.shopsphere
 ├── config/              # Application & Web MVC Configurations
 ├── controller/          # Customer MVC & API Controllers
 │   ├── admin/           # Admin Portal Controllers
-│   └── api/             # RESTful API Endpoints (Swagger / OpenAPI)
+│   ├── seller/          # Multi-Vendor Seller Portal Controllers
+│   └── api/             # RESTful API Endpoints (Swagger / OpenAPI / Health)
 ├── dto/                 # Data Transfer Objects & Requests
 ├── entity/              # Normalized JPA Entities
 ├── exception/           # Custom Exceptions & GlobalExceptionHandler
@@ -120,9 +128,9 @@ com.simson.shopsphere
 
 ```powershell
 # Navigate to project root
-cd C:\Users\Sim\.gemini\antigravity\scratch\ShopSphere
+cd C:\Users\Sim\.gemini\antigravity\scratch\Mart_repo
 
-# Run the test suite
+# Run the test suite (125 tests)
 mvn clean test
 
 # Package the application
@@ -134,7 +142,9 @@ mvn spring-boot:run
 
 Once running, access the portal at:
 - **Storefront**: [http://localhost:8080/](http://localhost:8080/)
+- **Seller Portal**: [http://localhost:8080/seller](http://localhost:8080/seller)
 - **Admin Portal**: [http://localhost:8080/admin](http://localhost:8080/admin)
+- **Health Check Endpoint**: [http://localhost:8080/api/v1/health](http://localhost:8080/api/v1/health)
 - **Interactive Swagger Docs**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 - **H2 Web Console**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console) (JDBC URL: `jdbc:h2:mem:shopspheredb`, User: `sa`, Password: empty)
 
@@ -144,8 +154,10 @@ Once running, access the portal at:
 
 | Role | Email | Password | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Super Admin** | `admin@shopsphere.com` | `Admin@ShopSphere2026!` | Complete administrative management |
-| **Demo Customer** | `rahul@example.com` | `User@123` | Browsing, cart, checkout, tracking |
+| **Super Admin** | `admin@shopsphere.com` | `Admin@ShopSphere2026!` | Complete administrative store management & audit trail |
+| **Marketplace Seller** | `seller@shopsphere.com` | `User@123` | Vendor dashboard, product listings, incoming orders |
+| **Demo Customer** | `rahul@example.com` | `User@123` | Browsing, cart, checkout, payment simulation, tracking |
+
 
 ---
 

@@ -27,11 +27,12 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProductServiceImpl.class);
 
-    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, FileStorageService fileStorageService, AuditLogService auditLogService) {
+    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, FileStorageService fileStorageService, AuditLogService auditLogService, com.simson.shopsphere.repository.OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.fileStorageService = fileStorageService;
         this.auditLogService = auditLogService;
+        this.orderItemRepository = orderItemRepository;
     }
 
 
@@ -39,6 +40,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final FileStorageService fileStorageService;
     private final AuditLogService auditLogService;
+    private final com.simson.shopsphere.repository.OrderItemRepository orderItemRepository;
 
     private String generateSlug(String name) {
         return name.toLowerCase()
@@ -294,5 +296,184 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public long getLowStockCount(int threshold) {
         return productRepository.countByStockQuantityLessThanEqual(threshold);
+    }
+
+    @Override
+    @Transactional
+    public void deleteProduct(Long id, String adminEmail) {
+        Product product = getProductById(id);
+        boolean hasOrders = orderItemRepository.existsByProductId(id);
+        if (hasOrders) {
+            // Safe soft-deactivation to protect order history and foreign key constraints
+            product.setActive(false);
+            productRepository.save(product);
+            auditLogService.log(adminEmail, "DEACTIVATE_PRODUCT", "Product", String.valueOf(product.getId()),
+                    "Product referenced in orders deactivated rather than hard-deleted: " + product.getName(), "127.0.0.1");
+        } else {
+            productRepository.delete(product);
+            auditLogService.log(adminEmail, "DELETE_PRODUCT", "Product", String.valueOf(id),
+                    "Product hard-deleted: " + product.getName(), "127.0.0.1");
+        }
+    }
+
+    @Override
+    @Transactional
+    public Product createSellerProduct(ProductDto dto, com.simson.shopsphere.entity.User seller) {
+        String sku = dto.getSku().trim().toUpperCase();
+        if (productRepository.existsBySku(sku)) {
+            throw new DuplicateResourceException("Product with SKU '" + sku + "' already exists.");
+        }
+
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + dto.getCategoryId()));
+
+        String slug = generateSlug(dto.getName());
+        if (productRepository.existsBySlug(slug)) {
+            slug = slug + "-" + System.currentTimeMillis();
+        }
+
+        String imageUrl = dto.getImageUrl();
+        if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
+            imageUrl = fileStorageService.storeFile(dto.getImageFile(), "products");
+        }
+        if (imageUrl == null || imageUrl.isBlank()) {
+            imageUrl = fileStorageService.getDefaultProductImage();
+        }
+
+        Product product = Product.builder()
+                .name(dto.getName().trim())
+                .slug(slug)
+                .description(dto.getDescription())
+                .brand(dto.getBrand() != null && !dto.getBrand().isBlank() ? dto.getBrand().trim() : "ShopSphere")
+                .category(category)
+                .price(dto.getPrice())
+                .discountPercentage(dto.getDiscountPercentage() != null ? dto.getDiscountPercentage() : BigDecimal.ZERO)
+                .stockQuantity(dto.getStockQuantity() != null ? dto.getStockQuantity() : 0)
+                .sku(sku)
+                .imageUrl(imageUrl)
+                .rating(BigDecimal.ZERO)
+                .reviewCount(0)
+                .active(dto.isActive())
+                .seller(seller)
+                .build();
+
+        Product saved = productRepository.save(product);
+        auditLogService.log(seller.getEmail(), "SELLER_CREATE_PRODUCT", "Product", String.valueOf(saved.getId()),
+                "Seller " + seller.getEmail() + " created product: " + saved.getName() + " (SKU: " + saved.getSku() + ")", "127.0.0.1");
+
+        return saved;
+    }
+
+    private void verifyProductOwnership(Product product, com.simson.shopsphere.entity.User seller) {
+        if (seller == null) {
+            throw new com.simson.shopsphere.exception.UnauthorizedAccessException("Authentication required.");
+        }
+        if (seller.isAdmin()) {
+            return; // Admins can manage any product
+        }
+        if (product.getSeller() == null || !product.getSeller().getId().equals(seller.getId())) {
+            throw new com.simson.shopsphere.exception.UnauthorizedAccessException("You are not authorized to modify or delete this product.");
+        }
+    }
+
+    @Override
+    @Transactional
+    public Product updateSellerProduct(Long id, ProductDto dto, com.simson.shopsphere.entity.User seller) {
+        Product product = getProductById(id);
+        verifyProductOwnership(product, seller);
+
+        String sku = dto.getSku().trim().toUpperCase();
+        if (!product.getSku().equalsIgnoreCase(sku) && productRepository.existsBySku(sku)) {
+            throw new DuplicateResourceException("Product with SKU '" + sku + "' already exists.");
+        }
+
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + dto.getCategoryId()));
+
+        product.setName(dto.getName().trim());
+        product.setDescription(dto.getDescription());
+        product.setBrand(dto.getBrand() != null && !dto.getBrand().isBlank() ? dto.getBrand().trim() : "ShopSphere");
+        product.setCategory(category);
+        product.setPrice(dto.getPrice());
+        product.setDiscountPercentage(dto.getDiscountPercentage() != null ? dto.getDiscountPercentage() : BigDecimal.ZERO);
+        product.setStockQuantity(dto.getStockQuantity() != null ? dto.getStockQuantity() : 0);
+        product.setSku(sku);
+        product.setActive(dto.isActive());
+
+        if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
+            String newImage = fileStorageService.storeFile(dto.getImageFile(), "products");
+            if (newImage != null) {
+                product.setImageUrl(newImage);
+            }
+        } else if (dto.getImageUrl() != null && !dto.getImageUrl().isBlank()) {
+            product.setImageUrl(dto.getImageUrl().trim());
+        }
+
+        Product updated = productRepository.save(product);
+        auditLogService.log(seller.getEmail(), "SELLER_UPDATE_PRODUCT", "Product", String.valueOf(updated.getId()),
+                "Seller updated product: " + updated.getName(), "127.0.0.1");
+
+        return updated;
+    }
+
+    @Override
+    @Transactional
+    public void updateSellerStock(Long id, int newQuantity, com.simson.shopsphere.entity.User seller) {
+        if (newQuantity < 0) {
+            throw new BadRequestException("Stock quantity cannot be negative.");
+        }
+        Product product = getProductById(id);
+        verifyProductOwnership(product, seller);
+
+        int oldStock = product.getStockQuantity();
+        product.setStockQuantity(newQuantity);
+        productRepository.save(product);
+
+        auditLogService.log(seller.getEmail(), "SELLER_UPDATE_STOCK", "Product", String.valueOf(product.getId()),
+                "Seller stock changed for " + product.getName() + " from " + oldStock + " to " + newQuantity, "127.0.0.1");
+    }
+
+    @Override
+    @Transactional
+    public void deleteSellerProduct(Long id, com.simson.shopsphere.entity.User seller) {
+        Product product = getProductById(id);
+        verifyProductOwnership(product, seller);
+
+        boolean hasOrders = orderItemRepository.existsByProductId(id);
+        if (hasOrders) {
+            product.setActive(false);
+            productRepository.save(product);
+            auditLogService.log(seller.getEmail(), "SELLER_DEACTIVATE_PRODUCT", "Product", String.valueOf(product.getId()),
+                    "Seller product referenced in orders deactivated: " + product.getName(), "127.0.0.1");
+        } else {
+            productRepository.delete(product);
+            auditLogService.log(seller.getEmail(), "SELLER_DELETE_PRODUCT", "Product", String.valueOf(id),
+                    "Seller product deleted: " + product.getName(), "127.0.0.1");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Product> getSellerProducts(com.simson.shopsphere.entity.User seller, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.DESC, "createdAt"));
+        return productRepository.findBySeller(seller, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getSellerProductCount(com.simson.shopsphere.entity.User seller) {
+        return productRepository.countBySeller(seller);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getSellerActiveProductCount(com.simson.shopsphere.entity.User seller) {
+        return productRepository.countBySellerAndActiveTrue(seller);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getSellerLowStockCount(com.simson.shopsphere.entity.User seller, int threshold) {
+        return productRepository.countBySellerAndStockQuantityLessThanEqual(seller, threshold);
     }
 }

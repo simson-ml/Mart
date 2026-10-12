@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="seller-sidebar(activeTab)" class="admin-sidebar p-3 d-flex flex-column" style="min-height: 100vh; background-color: #1e293b;">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+        <i class="bi bi-shop text-success fs-3"></i>
+        <div>
+            <h6 class="text-white fw-bold mb-0">SHOPSPHERE</h6>
+            <small class="text-success font-monospace">SELLER PORTAL</small>
+        </div>
+    </div>
+
+    <nav class="nav flex-column gap-1 flex-grow-1">
+        <a class="admin-nav-link text-white-50 p-2 rounded text-decoration-none d-flex align-items-center gap-2" 
+           th:classappend="${activeTab == 'dashboard'} ? 'bg-primary text-white' : ''" th:href="@{/seller/dashboard}">
+            <i class="bi bi-speedometer2 text-info"></i> Dashboard Overview
+        </a>
+        <a class="admin-nav-link text-white-50 p-2 rounded text-decoration-none d-flex align-items-center gap-2" 
+           th:classappend="${activeTab == 'products'} ? 'bg-primary text-white' : ''" th:href="@{/seller/products}">
+            <i class="bi bi-box-seam text-warning"></i> My Product Listings
+        </a>
+        <a class="admin-nav-link text-white-50 p-2 rounded text-decoration-none d-flex align-items-center gap-2" 
+           th:classappend="${activeTab == 'new-product'} ? 'bg-primary text-white' : ''" th:href="@{/seller/products/new}">
+            <i class="bi bi-plus-circle text-success"></i> Add New Product
+        </a>
+        <a class="admin-nav-link text-white-50 p-2 rounded text-decoration-none d-flex align-items-center gap-2" 
+           th:classappend="${activeTab == 'orders'} ? 'bg-primary text-white' : ''" th:href="@{/seller/orders}">
+            <i class="bi bi-receipt text-primary"></i> Incoming Orders
+        </a>
+    </nav>
+
+    <div class="border-top border-secondary pt-3 mt-auto">
+        <a th:href="@{/}" class="admin-nav-link text-white bg-success rounded px-3 py-2 text-center d-block mb-2 text-decoration-none fw-bold">
+            <i class="bi bi-shop me-1"></i> Customer Storefront
+        </a>
+        <form th:action="@{/logout}" method="POST">
+            <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded">
+                <i class="bi bi-box-arrow-right me-1"></i> Sign Out
+            </button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

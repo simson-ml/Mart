@@ -85,10 +85,13 @@ public class SecurityConfig {
                     "/api/cart/**",
                     "/api/compare/**",
                     "/api/v1/chat",
+                    "/api/v1/health",
                     "/error/**"
                 ).permitAll()
                 // Admin Portal
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Seller Portal
+                .requestMatchers("/seller/**").hasAnyRole("SELLER", "ADMIN")
                 // Customer Secured Endpoints
                 .requestMatchers(
                     "/account/**",

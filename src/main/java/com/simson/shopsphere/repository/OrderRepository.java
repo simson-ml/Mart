@@ -45,4 +45,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT COUNT(o) FROM Order o WHERE o.createdAt >= :since")
     long countOrdersSince(@Param("since") LocalDateTime since);
+
+    @Query("SELECT DISTINCT o FROM Order o JOIN o.items oi WHERE oi.product.seller = :seller ORDER BY o.createdAt DESC")
+    Page<Order> findOrdersBySeller(@Param("seller") User seller, Pageable pageable);
+
+    @Query("SELECT COUNT(DISTINCT o) FROM Order o JOIN o.items oi WHERE oi.product.seller = :seller")
+    long countOrdersBySeller(@Param("seller") User seller);
 }

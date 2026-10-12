@@ -68,4 +68,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT DISTINCT p.brand FROM Product p WHERE p.active = true ORDER BY p.brand ASC")
     List<String> findDistinctBrands();
+
+    Page<Product> findBySeller(com.simson.shopsphere.entity.User seller, Pageable pageable);
+    List<Product> findBySeller(com.simson.shopsphere.entity.User seller);
+    long countBySeller(com.simson.shopsphere.entity.User seller);
+    long countBySellerAndActiveTrue(com.simson.shopsphere.entity.User seller);
+    long countBySellerAndStockQuantityLessThanEqual(com.simson.shopsphere.entity.User seller, Integer threshold);
 }

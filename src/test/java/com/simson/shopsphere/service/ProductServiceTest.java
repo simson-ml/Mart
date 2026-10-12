@@ -36,6 +36,9 @@ class ProductServiceTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private com.simson.shopsphere.repository.OrderItemRepository orderItemRepository;
+
     @InjectMocks
     private ProductServiceImpl productService;
 

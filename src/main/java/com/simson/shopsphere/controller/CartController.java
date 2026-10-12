@@ -59,6 +59,11 @@ public class CartController {
         return "cart/cart";
     }
 
+    @GetMapping("/checkout")
+    public String proceedToCheckout() {
+        return "redirect:/checkout";
+    }
+
     @PostMapping("/add")
     public String addToCart(
             @RequestParam("productId") Long productId,

@@ -25,14 +25,21 @@ public class RegisterRequest {
     @NotBlank(message = "Please confirm your password")
     private String confirmPassword;
 
+    private String role; // "BUYER", "USER", or "SELLER"
+
     public RegisterRequest() {}
 
     public RegisterRequest(String name, String email, String phone, String password, String confirmPassword) {
+        this(name, email, phone, password, confirmPassword, null);
+    }
+
+    public RegisterRequest(String name, String email, String phone, String password, String confirmPassword, String role) {
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.password = password;
         this.confirmPassword = confirmPassword;
+        this.role = role;
     }
 
     public static RegisterRequestBuilder builder() {
@@ -45,15 +52,17 @@ public class RegisterRequest {
         private String phone;
         private String password;
         private String confirmPassword;
+        private String role;
 
         public RegisterRequestBuilder name(String name) { this.name = name; return this; }
         public RegisterRequestBuilder email(String email) { this.email = email; return this; }
         public RegisterRequestBuilder phone(String phone) { this.phone = phone; return this; }
         public RegisterRequestBuilder password(String password) { this.password = password; return this; }
         public RegisterRequestBuilder confirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; return this; }
+        public RegisterRequestBuilder role(String role) { this.role = role; return this; }
 
         public RegisterRequest build() {
-            return new RegisterRequest(name, email, phone, password, confirmPassword);
+            return new RegisterRequest(name, email, phone, password, confirmPassword, role);
         }
     }
 
@@ -71,4 +80,7 @@ public class RegisterRequest {
 
     public String getConfirmPassword() { return confirmPassword; }
     public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

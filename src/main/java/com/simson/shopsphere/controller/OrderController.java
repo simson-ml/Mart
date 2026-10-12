@@ -37,7 +37,7 @@ public class OrderController {
         this.paymentService = paymentService;
     }
 
-    @GetMapping
+    @GetMapping({"", "/history"})
     public String listOrders(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -50,7 +50,7 @@ public class OrderController {
         return "orders/history";
     }
 
-    @GetMapping("/confirmation/{orderNumber}")
+    @GetMapping({"/confirmation/{orderNumber}", "/order-confirmation/{orderNumber}"})
     public String orderConfirmation(@PathVariable String orderNumber, Model model) {
         User user = userService.getCurrentAuthenticatedUser();
         Order order = orderService.getOrderByOrderNumber(orderNumber, user);
@@ -59,6 +59,11 @@ public class OrderController {
         model.addAttribute("order", order);
         model.addAttribute("payment", payment);
         return "orders/confirmation";
+    }
+
+    @GetMapping("/payment/{orderNumber}")
+    public String paymentAliasRedirect(@PathVariable String orderNumber) {
+        return "redirect:/orders/" + orderNumber + "/payment";
     }
 
     @GetMapping("/{orderNumber}/payment")

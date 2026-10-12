@@ -56,11 +56,21 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(role -> role.equals("ROLE_" + Role.ADMIN.name()));
 
+        boolean isSeller = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_" + Role.SELLER.name()));
+
         SavedRequest savedRequest = requestCache.getRequest(request, response);
 
         if (isAdmin) {
             clearAuthenticationAttributes(request);
             getRedirectStrategy().sendRedirect(request, response, "/admin/dashboard");
+            return;
+        }
+
+        if (isSeller && savedRequest == null) {
+            clearAuthenticationAttributes(request);
+            getRedirectStrategy().sendRedirect(request, response, "/seller/dashboard");
             return;
         }
 

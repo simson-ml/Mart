@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Product Listings — Seller ShopSphere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-light">
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-lg-2 col-md-3">
+                <div th:replace="~{fragments/seller-sidebar :: seller-sidebar('products')}"></div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="col-lg-10 col-md-9 p-4">
+                <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="fw-bold mb-0">My Product Catalog</h3>
+                        <small class="text-muted">Manage your marketplace inventory, pricing, and stock levels</small>
+                    </div>
+                    <a th:href="@{/seller/products/new}" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="bi bi-plus-lg me-1"></i> Add New Product
+                    </a>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light small text-muted text-uppercase">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Image</th>
+                                    <th>Product Details</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="prod : ${productsPage.content}">
+                                    <td class="font-monospace text-muted" th:text="${prod.id}">1</td>
+                                    <td>
+                                        <img th:src="@{${prod.imageUrl}}" class="rounded object-fit-cover shadow-sm"
+                                             style="width: 48px; height: 48px;" alt="Product"
+                                             onerror="this.src='/images/products/placeholder.svg'">
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark" th:text="${prod.name}">Product Name</div>
+                                        <div class="small text-muted">
+                                            <span class="badge bg-light text-secondary border font-monospace me-1" th:text="${prod.sku}">SKU</span>
+                                            <span th:text="${prod.brand}">Brand</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${prod.category != null ? prod.category.name : 'Uncategorized'}">Category</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark" th:text="'₹' + ${#numbers.formatDecimal(prod.discountedPrice, 0, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                                        <small class="text-muted text-decoration-line-through" th:if="${prod.discountPercentage > 0}"
+                                               th:text="'₹' + ${#numbers.formatDecimal(prod.price, 0, 'COMMA', 2, 'POINT')}">₹0.00</small>
+                                        <span class="badge bg-danger-subtle text-danger ms-1" th:if="${prod.discountPercentage > 0}"
+                                              th:text="'-' + ${prod.discountPercentage} + '%'">-10%</span>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{/seller/products/stock/{id}(id=${prod.id})}" method="POST" class="d-flex align-items-center gap-1" style="max-width: 130px;">
+                                            <input type="number" name="stockQuantity" th:value="${prod.stockQuantity}" min="0" class="form-control form-control-sm text-center">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Save Stock">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${prod.active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}"
+                                              th:text="${prod.active ? 'Active' : 'Inactive'}">Active</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a th:href="@{/seller/products/edit/{id}(id=${prod.id})}" class="btn btn-outline-primary" title="Edit Listing">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form th:action="@{/seller/products/delete/{id}(id=${prod.id})}" method="POST" class="d-inline"
+                                                  onsubmit="return confirm('Are you sure you want to remove or archive this listing?');">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete or Archive">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${productsPage.empty}">
+                                    <td colspan="8" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                                        You have no products listed. Click "Add New Product" to start selling.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="card-footer bg-white border-0 py-3" th:if="${productsPage.totalPages > 1}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted" th:text="'Showing page ' + (${currentPage} + 1) + ' of ' + ${productsPage.totalPages}">Page 1 of 1</small>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item" th:classappend="${productsPage.first} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/seller/products(page=${currentPage - 1})}">Previous</a>
+                                    </li>
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, productsPage.totalPages - 1)}"
+                                        th:classappend="${i == currentPage} ? 'active'">
+                                        <a class="page-link" th:href="@{/seller/products(page=${i})}" th:text="${i + 1}">1</a>
+                                    </li>
+                                    <li class="page-item" th:classappend="${productsPage.last} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/seller/products(page=${currentPage + 1})}">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -447,4 +447,40 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> getRecentOrders(int limit) {
         return orderRepository.findRecentOrders(PageRequest.of(0, limit));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Order> getSellerOrders(User seller, Pageable pageable) {
+        if (seller == null) {
+            throw new UnauthorizedAccessException("Seller authentication required.");
+        }
+        return orderRepository.findOrdersBySeller(seller, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getSellerOrderCount(User seller) {
+        if (seller == null) return 0;
+        return orderRepository.countOrdersBySeller(seller);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Order getSellerOrderDetails(String orderNumber, User seller) {
+        if (seller == null) {
+            throw new UnauthorizedAccessException("Seller authentication required.");
+        }
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with order number: " + orderNumber));
+
+        if (!seller.isAdmin()) {
+            boolean hasSellerItem = order.getItems().stream()
+                    .anyMatch(item -> item.getProduct() != null && item.getProduct().getSeller() != null &&
+                            item.getProduct().getSeller().getId().equals(seller.getId()));
+            if (!hasSellerItem) {
+                throw new UnauthorizedAccessException("You are not authorized to view this order.");
+            }
+        }
+        return order;
+    }
 }

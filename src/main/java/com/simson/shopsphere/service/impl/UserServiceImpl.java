@@ -57,12 +57,17 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Password and confirm password do not match.");
         }
 
+        Role assignedRole = Role.USER;
+        if (request.getRole() != null && "SELLER".equalsIgnoreCase(request.getRole().trim())) {
+            assignedRole = Role.SELLER;
+        }
+
         User user = User.builder()
                 .name(request.getName().trim())
                 .email(normalizedEmail)
                 .phone(request.getPhone() != null ? request.getPhone().trim() : null)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER) // Always enforce USER role from registration
+                .role(assignedRole)
                 .enabled(true)
                 .build();
 

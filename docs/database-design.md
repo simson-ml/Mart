@@ -9,6 +9,7 @@ erDiagram
     USERS ||--o| WISHLISTS : "owns"
     USERS ||--o{ ORDERS : "places"
     USERS ||--o{ REVIEWS : "writes"
+    USERS ||--o{ PRODUCTS : "sells"
 
     CATEGORIES ||--o{ PRODUCTS : "contains"
 
@@ -30,7 +31,7 @@ erDiagram
         varchar email UK
         varchar phone
         varchar password
-        varchar role
+        varchar role "USER | SELLER | ADMIN"
         boolean enabled
         timestamp created_at
         timestamp updated_at
@@ -50,6 +51,7 @@ erDiagram
     PRODUCTS {
         bigserial id PK
         bigint category_id FK
+        bigint seller_id FK
         varchar name
         varchar slug UK
         varchar brand
@@ -126,16 +128,31 @@ erDiagram
 ## 2. Table DDL & Relationships
 
 ### `users`
-- Stores user credentials and authorization roles (`USER`, `ADMIN`).
+- Stores user credentials and authorization roles (`USER`, `SELLER`, `ADMIN`).
 - Passwords are strictly hashed with **BCrypt**.
 - `email` has a unique constraint to ensure identity isolation.
 
 ### `products`
 - Maintains catalog metadata, brand, SKU code, real-time inventory count (`stock_quantity`), rating, and discount percentage.
-- Indexes placed on `category_id`, `brand`, `active`, `price`, and `rating` for optimized searching and filtering.
+- References `seller_id` (FK to `users.id`) to partition marketplace listings by vendor.
+- Indexes placed on `category_id`, `brand`, `active`, `price`, `rating`, and `seller_id` (`idx_products_seller`) for optimized searching, filtering, and seller dashboard performance.
 
 ### `orders` & `order_items`
 - Maintains immutable snapshots of the shipping address and the exact unit price (`unit_price`) at the instant of order placement, preventing retroactive pricing modifications.
+- Each `order_item` references `product_id`, allowing seller-specific filtering of incoming customer orders.
 
 ### `coupons`
 - Supports both `PERCENTAGE` and `FIXED_AMOUNT` discount strategies with configurable validity windows, minimum purchase constraints, and usage caps.
+
+---
+
+## 3. Flyway Migration History
+
+1. **`V1__initial_schema.sql`**: Baseline database schema containing users, roles, categories, products, addresses, carts, cart items, wishlists, wishlist items, orders, order items, payments, reviews, and audit logs.
+2. **`V2__seed_data.sql`**: Initial seed dataset providing demo categories, catalog products, and initial administrator/buyer accounts.
+3. **`V3__add_seller_support.sql`**: Multi-Seller marketplace extension:
+   - Alters `products` table to add `seller_id BIGINT REFERENCES users(id) ON DELETE SET NULL`.
+   - Creates index `idx_products_seller` on `products(seller_id)`.
+   - Seeds primary verified marketplace seller (`seller@shopsphere.com` / `User@123`, `role = 'SELLER'`).
+   - Links initial catalog products to the default marketplace seller account.
+

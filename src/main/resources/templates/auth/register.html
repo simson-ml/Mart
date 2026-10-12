@@ -76,6 +76,24 @@
                         <div class="text-danger small mt-1" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">Confirm password error</div>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Account Type *</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check flex-fill p-2 border rounded bg-light">
+                                <input class="form-check-input ms-1" type="radio" th:field="*{role}" value="USER" id="roleBuyer" checked>
+                                <label class="form-check-label fw-semibold ms-2 small" for="roleBuyer">
+                                    <i class="bi bi-cart3 text-primary me-1"></i> Buyer (Customer)
+                                </label>
+                            </div>
+                            <div class="form-check flex-fill p-2 border rounded bg-light">
+                                <input class="form-check-input ms-1" type="radio" th:field="*{role}" value="SELLER" id="roleSeller">
+                                <label class="form-check-label fw-semibold ms-2 small" for="roleSeller">
+                                    <i class="bi bi-shop text-success me-1"></i> Seller (Merchant)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow-sm mb-3">
                         <i class="bi bi-person-check-fill me-1"></i> Register Account
                     </button>

@@ -22,6 +22,10 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id")
+    private User seller;
+
     @Column(nullable = false)
     private String name;
 
@@ -123,11 +127,19 @@ public class Product {
         public ProductBuilder imageUrl(String imageUrl) { this.imageUrl = imageUrl; return this; }
         public ProductBuilder rating(BigDecimal rating) { this.rating = rating; return this; }
         public ProductBuilder reviewCount(Integer reviewCount) { this.reviewCount = reviewCount; return this; }
+        private User seller;
+
+        public ProductBuilder seller(User seller) { this.seller = seller; return this; }
         public ProductBuilder active(boolean active) { this.active = active; return this; }
         public Product build() {
-            return new Product(id, category, name, slug, description, brand, price, discountPercentage, stockQuantity, sku, imageUrl, rating, reviewCount, active);
+            Product p = new Product(id, category, name, slug, description, brand, price, discountPercentage, stockQuantity, sku, imageUrl, rating, reviewCount, active);
+            p.setSeller(seller);
+            return p;
         }
     }
+
+    public User getSeller() { return seller; }
+    public void setSeller(User seller) { this.seller = seller; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

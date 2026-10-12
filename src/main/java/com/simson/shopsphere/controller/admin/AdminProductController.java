@@ -172,4 +172,12 @@ public class AdminProductController {
         redirectAttributes.addFlashAttribute("infoMessage", "Product status updated.");
         return "redirect:/admin/products";
     }
+
+    @PostMapping("/delete/{id}")
+    public String deleteProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        String adminEmail = getAuthenticatedAdminEmail();
+        productService.deleteProduct(id, adminEmail);
+        redirectAttributes.addFlashAttribute("successMessage", "Product removed or deactivated successfully.");
+        return "redirect:/admin/products";
+    }
 }

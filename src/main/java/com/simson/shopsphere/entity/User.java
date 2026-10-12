@@ -117,4 +117,8 @@ public class User {
     public boolean isAdmin() {
         return this.role == Role.ADMIN;
     }
+
+    public boolean isSeller() {
+        return this.role == Role.SELLER;
+    }
 }

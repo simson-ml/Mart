@@ -31,4 +31,9 @@ public interface OrderService {
     BigDecimal getTotalSales();
     long getPendingOrderCount();
     List<Order> getRecentOrders(int limit);
+
+    // Seller
+    Page<Order> getSellerOrders(User seller, Pageable pageable);
+    long getSellerOrderCount(User seller);
+    Order getSellerOrderDetails(String orderNumber, User seller);
 }
